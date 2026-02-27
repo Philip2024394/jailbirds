@@ -1,0 +1,5 @@
+{
+  "name": "The Jailbird Fast Food",
+  "description": "A prison-themed fast food experience in Yogyakarta with a unique reward system and WhatsApp ordering.",
+  "requestFramePermissions": ["geolocation"]
+}

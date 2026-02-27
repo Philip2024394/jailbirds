@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-prison-orange: #FF6B00;
+  --color-prison-black: #0A0A0A;
+  --color-prison-grey: #1A1A1A;
+}
+
+@layer base {
+  body {
+    @apply bg-prison-black text-white font-sans selection:bg-prison-orange selection:text-black overflow-x-hidden;
+  }
+
+  /* Hide Scrollbar Globally */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .metallic-steel {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  .metallic-steel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .barbed-wire-border {
+    position: relative;
+    border: 2px solid #333;
+  }
+
+  .barbed-wire-border::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border: 1px dashed #666;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .orange-gradient-glow {
+    background: linear-gradient(to bottom, #FF8C00, #FF4500);
+    box-shadow: 0 0 15px rgba(255, 107, 0, 0.4), inset 0 0 10px rgba(255,255,255,0.2);
+  }
+
+  .industrial-font {
+    font-family: "JetBrains Mono", monospace;
+    letter-spacing: -0.05em;
+  }
+}
+
+.brutal-border {
+  @apply border-2 border-white;
+}
+
+.orange-glow {
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+}

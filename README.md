@@ -1,11 +1,43 @@
-<div align="center">
+# Jailbirds - Yogyakarta's Most Wanted Fast Food
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+This is a premium fast-food delivery application built with React, Tailwind CSS, and Framer Motion.
 
-  <h1>Built with AI Studio</h2>
+## Features
+- **Premium UI**: Gritty industrial prison theme with metallic textures and barbed wire aesthetics.
+- **Responsive Design**: Optimized for mobile (2-column menu) and desktop.
+- **Interactive Menu**: Category filtering, detailed food drawers, and animated transitions.
+- **Cart System**: Add items to "Lockup", manage quantities, and simulated checkout.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Local Setup
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- npm (comes with Node.js)
 
-</div>
+### Installation
+1. Download and extract the project files.
+2. Open a terminal in the project directory.
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Development
+To start the development server:
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:3000` (or the port specified in your terminal).
+
+### Production Build
+To create a production-ready bundle:
+```bash
+npm run build
+```
+
+## Tech Stack
+- **Framework**: React 18
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Build Tool**: Vite
