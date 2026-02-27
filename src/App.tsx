@@ -14,7 +14,12 @@ import {
   MapPin,
   MessageSquare,
   History,
-  ShieldAlert
+  ShieldAlert,
+  Beef,
+  Package,
+  UtensilsCrossed,
+  Coffee,
+  LayoutGrid
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -24,6 +29,15 @@ import { Category, FoodItem, CartItem } from './types';
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string }>> = {
+  'Burgers': Beef,
+  'Meal Deals': Package,
+  'HotDogs': Flame,
+  'Kebabs': UtensilsCrossed,
+  'Drinks': Coffee,
+  'Trays': LayoutGrid,
+};
 
 // --- Components ---
 
@@ -50,7 +64,7 @@ const Navbar = ({ activePage, setActivePage, cartCount }: {
           <div className="w-10 h-10 bg-prison-orange flex items-center justify-center rounded-sm rotate-3 brutal-border">
             <ShieldAlert className="text-black w-6 h-6" />
           </div>
-          <span className="font-bold text-xl tracking-tighter italic">THE JAILBIRD</span>
+          <span className="font-bold text-xl tracking-tighter italic">Jailbirds</span>
         </div>
 
         <div className="hidden md:flex items-center gap-8">
@@ -125,14 +139,15 @@ const Navbar = ({ activePage, setActivePage, cartCount }: {
 
 const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?: string }) => {
   return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className="metallic-steel barbed-wire-border rounded-2xl overflow-hidden group cursor-pointer shadow-2xl flex flex-col h-full"
-      onClick={onClick}
-    >
+    <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
+      <motion.div
+        whileHover={{ y: -5 }}
+        className="metallic-steel rounded-2xl overflow-hidden group cursor-pointer shadow-2xl flex flex-col h-full"
+        onClick={onClick}
+      >
       {/* Image Container with Padding */}
       <div className="p-3 pb-0">
-        <div className="relative aspect-square overflow-hidden rounded-xl shadow-inner bg-prison-black">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-xl shadow-inner bg-prison-black">
           <img 
             src={item.image} 
             alt={item.name}
@@ -196,6 +211,7 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
         </div>
       </div>
     </motion.div>
+    </div>
   );
 };
 
@@ -319,11 +335,11 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-prison-black via-prison-black/20 to-transparent" />
           
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 -translate-y-12 md:-translate-y-[250px]">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 translate-y-[46px] md:-translate-y-[150px]">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-block bg-prison-orange text-black px-4 py-1 font-bold text-sm mb-6 rotate-[-2deg] brutal-border border-black"
+              className="inline-block bg-prison-orange text-black px-4 py-1 font-bold text-sm mb-6 rotate-[-2deg] brutal-border border-black -translate-y-[150px]"
             >
               YOGYAKARTA'S MOST WANTED
             </motion.div>
@@ -345,8 +361,8 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
             </motion.p>
           </div>
 
-          {/* Categories under the handcuffs */}
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center text-center px-4 translate-y-32 md:translate-y-[200px]">
+          {/* Categories under the handcuffs — desktop only */}
+          <div className="absolute inset-0 z-40 hidden md:flex flex-col items-center justify-center text-center px-4 translate-y-32 md:translate-y-[200px]">
             <div className="flex items-center gap-3 overflow-x-auto py-6 max-w-full">
               {CATEGORIES.map((cat) => (
                 <button
@@ -379,18 +395,66 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
         </div>
       </section>
 
-      {/* Menu Grid */}
-      <section id="menu" className="pt-0 pb-12 max-w-7xl mx-auto px-4 scroll-mt-20 -mt-8 md:-mt-16 relative z-30">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => (
-              <FoodCard 
-                key={item.id} 
-                item={item} 
-                onClick={() => onSelectItem(item)} 
-              />
-            ))}
-          </AnimatePresence>
+      {/* Menu Grid — mobile-first: menu pulled up; desktop: normal spacing */}
+      <section id="menu" className="pt-0 pb-12 md:pb-12 max-w-7xl mx-auto px-4 md:px-4 scroll-mt-20 -mt-[160px] md:mt-6 relative z-30">
+        {/* Mobile: floating category buttons — barbed wire frame on each button + container rim */}
+        <div className="menu-category-float md:hidden">
+          <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl py-3 px-2 flex flex-col items-center gap-3">
+            {CATEGORIES.map((cat) => {
+              const Icon = CATEGORY_ICONS[cat];
+              return (
+                <div key={cat} className="barbed-wire-card-wrapper rounded-full p-0.5">
+                  <button
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      document.getElementById('menu-cards')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }}
+                    className={cn(
+                      "w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md barbed-wire-border",
+                      activeCategory === cat
+                        ? "bg-prison-orange text-black scale-110 orange-glow"
+                        : "bg-prison-grey/90 text-white/80 hover:text-white active:scale-95"
+                    )}
+                    title={cat}
+                    aria-label={cat}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="min-h-[60vh] md:min-h-0">
+          {/* Menu cards area — full width frame, no clipping */}
+          <div id="menu-cards" className="min-w-0 overflow-visible pr-14 md:pr-0">
+            {/* Mobile: category label */}
+            <div className="md:hidden mb-3">
+              <h2 className="text-prison-orange font-black text-lg uppercase tracking-tighter industrial-font">
+                {activeCategory}
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
+              <AnimatePresence mode="wait">
+                {filteredItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: 80 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -60 }}
+                    transition={{ type: 'spring', damping: 26, stiffness: 280, delay: index * 0.03 }}
+                    className="h-full"
+                  >
+                    <FoodCard 
+                      item={item} 
+                      onClick={() => onSelectItem(item)} 
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </section>
     </div>

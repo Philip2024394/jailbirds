@@ -41,16 +41,40 @@
 
   .barbed-wire-border {
     position: relative;
-    border: 2px solid #333;
+    border: none;
+    /* Outer rim: two-strand metallic wire */
+    box-shadow:
+      0 0 0 2px #4a4a4a,
+      0 0 0 4px #2d2d2d,
+      0 0 0 5px #5a5a5a,
+      inset 0 0 0 1px rgba(255,255,255,0.06);
   }
 
   .barbed-wire-border::before {
     content: "";
     position: absolute;
-    inset: -4px;
-    border: 1px dashed #666;
+    inset: -7px;
+    border-radius: inherit;
     pointer-events: none;
-    opacity: 0.5;
+    border: 2px dashed #555;
+    opacity: 0.85;
+  }
+
+  /* Wrapper for menu cards so barbed wire sits on true outer rim */
+  .barbed-wire-card-wrapper {
+    position: relative;
+    padding: 5px;
+    border-radius: 1rem;
+  }
+
+  .barbed-wire-card-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: inherit;
+    pointer-events: none;
+    border: 2px dashed #555;
+    opacity: 0.9;
   }
 
   .orange-gradient-glow {
@@ -70,4 +94,24 @@
 
 .orange-glow {
   box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+}
+
+/* Floating menu category buttons (mobile) — start below hero tagline, no strip */
+.menu-category-float {
+  position: absolute;
+  right: 0.5rem;
+  top: 1rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem;
+  pointer-events: none;
+}
+.menu-category-float > * {
+  pointer-events: auto;
+}
+.menu-category-float button {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
