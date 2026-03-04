@@ -10,8 +10,13 @@
 }
 
 @layer base {
+  html {
+    height: 100%;
+  }
+
   body {
     @apply bg-prison-black text-white font-sans selection:bg-prison-orange selection:text-black overflow-x-hidden;
+    min-height: 100%;
   }
 
   /* Hide Scrollbar Globally */
@@ -86,6 +91,29 @@
     font-family: "JetBrains Mono", monospace;
     letter-spacing: -0.05em;
   }
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-pt {
+  padding-top: var(--safe-top);
+}
+
+.safe-pb {
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-pl {
+  padding-left: var(--safe-left);
+}
+
+.safe-pr {
+  padding-right: var(--safe-right);
 }
 
 .brutal-border {

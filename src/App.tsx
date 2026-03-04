@@ -30,6 +30,26 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function useBodyScrollLock(locked: boolean) {
+  useEffect(() => {
+    if (!locked) return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [locked]);
+}
+
 const ChiliPepperIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
   <svg
     viewBox="0 0 24 24"
@@ -57,6 +77,37 @@ const STORE_LOCATION = {
   lng: 110.4185,
 };
 
+const FoodCardSkeleton = () => {
+  return (
+    <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
+      <div className="metallic-steel rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full relative">
+        <div className="p-3 pb-0">
+          <div className="relative h-40 md:h-48 overflow-hidden rounded-xl shadow-inner bg-prison-black">
+            <div className="absolute inset-0 bg-white/5 animate-pulse" />
+          </div>
+        </div>
+        <div className="p-3 md:p-4 flex flex-col flex-grow">
+          <div className="mb-2">
+            <div className="h-4 md:h-5 w-3/4 bg-white/10 rounded animate-pulse" />
+          </div>
+          <div className="space-y-2 mb-3">
+            <div className="h-3 w-full bg-white/10 rounded animate-pulse" />
+            <div className="h-3 w-11/12 bg-white/10 rounded animate-pulse" />
+            <div className="h-3 w-4/5 bg-white/10 rounded animate-pulse" />
+          </div>
+          <div className="mt-auto space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="h-[52px] bg-white/5 border border-white/10 rounded-xl animate-pulse" />
+              <div className="h-[52px] bg-white/5 border border-white/10 rounded-xl animate-pulse" />
+            </div>
+            <div className="h-10 bg-prison-orange/30 rounded-xl animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GiftFriendPage = ({ onSelectCategory }: { onSelectCategory: (c: Category) => void }) => {
   const [footerMsgIndex, setFooterMsgIndex] = useState(0);
   const [heliPhase, setHeliPhase] = useState<'enter' | 'hover' | 'exit'>('enter');
@@ -64,6 +115,8 @@ const GiftFriendPage = ({ onSelectCategory }: { onSelectCategory: (c: Category) 
   const [selectedGiftCardId, setSelectedGiftCardId] = useState<string | null>(null);
   const [giftCardPreviewIndex, setGiftCardPreviewIndex] = useState(0);
   const [isGiftCardSliderOpen, setIsGiftCardSliderOpen] = useState(false);
+
+  useBodyScrollLock(isGiftCardSliderOpen);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -724,6 +777,8 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
             src={item.image} 
             alt={item.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+            decoding="async"
             referrerPolicy="no-referrer"
           />
           {/* Cinematic Overlay */}
@@ -790,6 +845,8 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
                 src={DELIVERY_ICON_URL}
                 alt="Delivery"
                 className="w-[32px] h-[32px] object-contain opacity-60 -scale-x-100"
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
               />
               <div className="min-w-0">
@@ -802,6 +859,8 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
                 src={ETA_ICON_URL}
                 alt="ETA"
                 className="w-[29px] h-[29px] object-contain opacity-60"
+                loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
               />
               <div className="min-w-0">
@@ -831,6 +890,8 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
   onGiftFriend?: () => void;
 }) => {
   if (!item) return null;
+
+  useBodyScrollLock(true);
 
   const deliveryFee = useMemo(() => deliveryFeeForZone(selectedZone), [selectedZone]);
 
@@ -889,6 +950,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
   const [quantity, setQuantity] = useState(1);
   const [giftPreviewIndex, setGiftPreviewIndex] = useState(0);
   const [isFriesInfoOpen, setIsFriesInfoOpen] = useState(false);
+  const [drawerImageLoaded, setDrawerImageLoaded] = useState(false);
 
   const hasFries = useMemo(() => {
     const haystack = `${item.shortDescription ?? ''}\n${item.fullDescription ?? ''}`.toLowerCase();
@@ -911,6 +973,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
     setSmallDrink(null);
     setExtraSauceFlavor('');
     setQuantity(1);
+    setDrawerImageLoaded(false);
   }, [EXTRA_OPTIONS, REMOVAL_OPTIONS, item.id]);
 
   useEffect(() => {
@@ -1014,6 +1077,8 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                       src="https://ik.imagekit.io/7grri5v7d/french%20fries%20containers.png"
                       alt="Jailbirds fries container"
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                     />
                   </div>
@@ -1045,10 +1110,19 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
         <div className="p-4 md:p-6">
           <div className="relative rounded-2xl overflow-hidden brutal-border border-white/10 shadow-inner">
             <div className="aspect-[4/3] bg-prison-black">
+              {!drawerImageLoaded && (
+                <div className="absolute inset-0 bg-white/5 animate-pulse" />
+              )}
               <img
                 src={item.image}
                 alt={item.name}
-                className="w-full h-full object-cover"
+                className={cn(
+                  "w-full h-full object-cover transition-opacity duration-300",
+                  drawerImageLoaded ? "opacity-100" : "opacity-0"
+                )}
+                onLoad={() => setDrawerImageLoaded(true)}
+                loading="eager"
+                decoding="async"
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -1115,6 +1189,8 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                       src={DELIVERY_ICON_URL}
                       alt="Delivery"
                       className="w-[32px] h-[32px] object-contain opacity-60 -scale-x-100"
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                     />
                     <p className="text-[10px] text-white/40 uppercase font-black">Delivery</p>
@@ -1127,6 +1203,8 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                       src={ETA_ICON_URL}
                       alt="Time"
                       className="w-[29px] h-[29px] object-contain opacity-60"
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                     />
                     <p className="text-[10px] text-white/40 uppercase font-black">Time</p>
@@ -1476,14 +1554,152 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
 
 const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategory }: { onSelectItem: (item: FoodItem) => void; selectedZone: DeliveryZoneId | null; activeCategory: Category; setActiveCategory: (c: Category) => void }) => {
 
+  const [homeHeliPhase, setHomeHeliPhase] = useState<'enter' | 'hover' | 'exit'>('enter');
+  const [homeHeliDone, setHomeHeliDone] = useState(false);
+
+  useEffect(() => {
+    if (homeHeliPhase !== 'hover') return;
+    const timeout = window.setTimeout(() => {
+      setHomeHeliPhase('exit');
+    }, 3000);
+    return () => window.clearTimeout(timeout);
+  }, [homeHeliPhase]);
+
   const filteredItems = useMemo(() => {
     return MENU_ITEMS.filter(item => item.category === activeCategory);
+  }, [activeCategory]);
+
+  const [menuSkeletonOn, setMenuSkeletonOn] = useState(true);
+
+  useEffect(() => {
+    setMenuSkeletonOn(true);
+    const t = window.setTimeout(() => setMenuSkeletonOn(false), 480);
+    return () => window.clearTimeout(t);
   }, [activeCategory]);
 
   return (
     <div className="pt-16">
       {/* Hero */}
       <section className="relative w-full flex flex-col items-center justify-center overflow-hidden">
+        {!homeHeliDone && (
+        <motion.div
+          initial={{ x: '120vw', opacity: 1 }}
+          animate={
+            homeHeliPhase === 'enter'
+              ? { x: ['120vw', '0vw'], y: [0, 10, -6, 0], opacity: 1 }
+              : homeHeliPhase === 'hover'
+                ? { x: '0vw', y: [0, -6, 2, -4, 0], opacity: 1 }
+                : { x: ['0vw', '-130vw'], y: [0, 8, 14], opacity: 1 }
+          }
+          transition={
+            homeHeliPhase === 'hover'
+              ? { duration: 1.4, repeat: Infinity, ease: 'easeInOut' }
+              : { duration: 5.2, ease: 'easeInOut' }
+          }
+          onAnimationComplete={() => {
+            if (homeHeliPhase === 'enter') {
+              setHomeHeliPhase('hover');
+              return;
+            }
+            if (homeHeliPhase === 'exit') {
+              setHomeHeliDone(true);
+            }
+          }}
+          className="absolute left-1/2 top-24 md:top-28 -translate-x-1/2 z-30 pointer-events-none"
+        >
+          <div className="relative w-[260px] md:w-[420px]">
+            <img
+              src="https://ik.imagekit.io/7grri5v7d/Jailbirds%20prison%20helicopter%20philip.png"
+              alt="Jailbirds helicopter"
+              className="w-full h-auto drop-shadow-[0_25px_40px_rgba(0,0,0,0.65)]"
+              referrerPolicy="no-referrer"
+            />
+            <motion.div
+              aria-hidden
+              className="absolute left-[47%] top-[13%] w-[58%] h-[34%] rounded-full z-[1]"
+              style={{
+                background:
+                  'conic-gradient(from 90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.14), rgba(0,0,0,0.0))',
+                filter: 'blur(10px)',
+                mixBlendMode: 'multiply',
+                opacity: 0.22,
+              }}
+              transformTemplate={({ rotate }) => `translate(-50%, -50%) rotate(${rotate}deg)`}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 5.2, repeat: Infinity, ease: 'linear' }}
+            />
+            <motion.div
+              aria-hidden
+              className="absolute left-[47%] top-[13%] w-[50%] h-[30%] rounded-full z-10"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, rgba(255,255,255,0.0), rgba(255,255,255,0.22), rgba(255,255,255,0.0))',
+                filter: 'blur(0.8px) saturate(1.0)',
+                mixBlendMode: 'screen',
+                opacity: 0.84,
+                transformStyle: 'preserve-3d',
+              }}
+              transformTemplate={({ rotate }) => `translate(-50%, -50%) perspective(900px) rotateX(-86deg) rotateZ(${rotate}deg)`}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.16, repeat: Infinity, ease: 'linear' }}
+            />
+            <motion.div
+              aria-hidden
+              className="absolute left-[47%] top-[18%] w-[66%] h-[40%] rounded-full z-[2]"
+              style={{
+                background:
+                  'conic-gradient(from 270deg, rgba(0,0,0,0.0), rgba(0,0,0,0.12), rgba(0,0,0,0.0))',
+                filter: 'blur(12px)',
+                mixBlendMode: 'multiply',
+                opacity: 0.18,
+              }}
+              transformTemplate={({ rotate }) => `translate(-50%, -50%) rotate(${rotate}deg)`}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 5.2, repeat: Infinity, ease: 'linear' }}
+            />
+            <div
+              className="absolute left-1/2 top-[18%] w-[300px] h-[3px] rounded-full z-20"
+              style={{
+                transform: `translate(-50%, -50%) translate(${HELI_ROTOR_LINE_X_OFFSET_PX}px, ${HELI_ROTOR_LINE_Y_OFFSET_PX}px)`,
+              }}
+            >
+              <motion.div
+                aria-hidden
+                className="w-full h-full rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,1)',
+                  filter: 'blur(0.25px)',
+                  mixBlendMode: 'screen',
+                }}
+                animate={{ opacity: [0.08, 0.24, 0.12, 0.22, 0.08] }}
+                transition={{ duration: 0.22, repeat: Infinity, ease: 'linear' }}
+              />
+            </div>
+            <div
+              aria-hidden
+              className="absolute left-[90%] top-[31%] w-[56px] h-[56px] z-[10]"
+              style={{ mixBlendMode: 'screen', transform: 'translate(-50%, -50%) translate(20px, -4px)' }}
+            >
+              <motion.div
+                className="absolute left-1/2 top-1/2 w-[50px] h-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,1), rgba(255,255,255,0.0))',
+                  filter: 'blur(0.35px)',
+                  opacity: 0.95,
+                  transformOrigin: '50% 50%',
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+              />
+              <div
+                className="absolute left-1/2 top-1/2 w-[5px] h-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.9)', filter: 'blur(0.2px)', opacity: 0.85 }}
+              />
+            </div>
+          </div>
+        </motion.div>
+        )}
         <div className="relative w-full z-0">
           <img 
             src="https://ik.imagekit.io/7grri5v7d/jailbirds%20food%20main%20image.png" 
@@ -1583,22 +1799,37 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
               <AnimatePresence mode="wait">
-                {filteredItems.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, x: 80 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -60 }}
-                    transition={{ type: 'spring', damping: 26, stiffness: 280, delay: index * 0.03 }}
-                    className="h-full"
-                  >
-                    <FoodCard 
-                      item={item} 
-                      onClick={() => onSelectItem(item)} 
-                      selectedZone={selectedZone}
-                    />
-                  </motion.div>
-                ))}
+                {menuSkeletonOn ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <motion.div
+                      key={`skeleton-${activeCategory}-${i}`}
+                      initial={{ opacity: 0, x: 40 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -40 }}
+                      transition={{ type: 'spring', damping: 26, stiffness: 280, delay: i * 0.02 }}
+                      className="h-full"
+                    >
+                      <FoodCardSkeleton />
+                    </motion.div>
+                  ))
+                ) : (
+                  filteredItems.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: 80 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -60 }}
+                      transition={{ type: 'spring', damping: 26, stiffness: 280, delay: index * 0.03 }}
+                      className="h-full"
+                    >
+                      <FoodCard 
+                        item={item} 
+                        onClick={() => onSelectItem(item)} 
+                        selectedZone={selectedZone}
+                      />
+                    </motion.div>
+                  ))
+                )}
               </AnimatePresence>
             </div>
           </div>
