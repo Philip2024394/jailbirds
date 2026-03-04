@@ -1,6 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 
-export type Category = 'Burgers' | 'Meal Deals' | 'HotDogs' | 'Kebabs' | 'Drinks' | 'Trays';
+export type Category = 'Burgers' | 'Meal Deals' | 'HotDogs' | 'Kebabs' | 'Drinks' | 'Trays' | "Sandwich's";
 
 export type SmallDrinkOption = 'Coca Cola' | 'Sprite' | 'Aqua' | 'Fanta';
 

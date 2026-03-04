@@ -67,12 +67,16 @@ const EXTRA_PRICES: Record<string, number> = {
   'Onion': 3000,
   'Cheese': 2200,
   'Tamatoe': 3000,
+  'Lettuce': 0,
+  'Smoked Beef': 5000,
   'Sausage': 5000,
   'Fried Egg': 3500,
   'Onion (Parole)': 2500,
   'Tamatoe Fried': 3000,
   'Fried Tamatoe': 3000,
   'Sauce': 0,
+  'Black Coffee': 14000,
+  'White Capucino': 17000,
 };
 
 const SAUCE_FLAVORS: SauceFlavor[] = ['Chilli', 'BBQ', 'Cheese', 'Tamatoe', 'Mayonaise'];
@@ -165,10 +169,11 @@ const cartLineItemSubtotal = (item: CartLineItem) => {
 const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string }>> = {
   'Burgers': Beef,
   'Meal Deals': Package,
-  'HotDogs': Flame,
-  'Kebabs': UtensilsCrossed,
+  "Sandwich's": UtensilsCrossed,
+  'HotDogs': UtensilsCrossed,
+  'Kebabs': LayoutGrid,
   'Drinks': Coffee,
-  'Trays': LayoutGrid,
+  'Trays': LayoutGrid
 };
 
 // --- Components ---
@@ -389,6 +394,10 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
     if (item.id === 'm3') return ['Sausage', 'Fried Egg', 'Onion (Parole)', 'Tamatoe Fried', 'Extra Sauce'];
     if (item.id === 'm5') return ['Fried Egg', 'Fried Tamatoe', 'Sauce'];
     if (item.id === 'm6') return ['Cheese', 'Fried Tamatoe', 'Sauce'];
+    if (item.id === 's1') return ['Extra Cheese', 'Onion', 'Tamatoe', 'Extra Sauce'];
+    if (item.id === 's2') return ['Onion', 'Tamatoe', 'Cheese', 'Smoked Beef', 'Sauce'];
+    if (item.id === 's3') return ['Cheese', 'Onion', 'Tamatoe', 'Sauce'];
+    if (item.id === 's4') return ['Tamatoe', 'Onion', 'Cheese', 'Sauce', 'Lettuce', 'Black Coffee', 'White Capucino'];
     return ['Extra Cheese', 'Extra Sauce', 'Bacon'];
   }, [item.id]);
 
@@ -397,6 +406,10 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
     if (item.id === 'm3') return ['Fried Egg', 'Sauced Beans', 'Fries', 'Jailbirds Sauce'];
     if (item.id === 'm5') return ['Fried Egg', 'Fried Onion', 'Fries', 'Jailbirds Sauce'];
     if (item.id === 'm6') return ['Fried Egg', 'Cheese', 'Fried Onion', 'Beans', 'Jailbirds Sauce'];
+    if (item.id === 's1') return ['Onion', 'Tamatoe', 'Cheese', 'Butter'];
+    if (item.id === 's2') return ['Onion', 'Cheese', 'Tamatoe'];
+    if (item.id === 's3') return ['Onion', 'Cheese', 'Tamatoe', 'Butter'];
+    if (item.id === 's4') return ['Cheese', 'Onion', 'Tamatoe', 'Mayonaise', 'Butter'];
     return ['No Onions', 'No Pickles', 'No Mayo'];
   }, [item.id]);
   const SMALL_DRINK_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta'];

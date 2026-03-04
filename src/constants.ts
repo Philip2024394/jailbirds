@@ -3,6 +3,7 @@ import { FoodItem, Category, Reward } from './types';
 export const CATEGORIES: Category[] = [
   'Burgers',
   'Meal Deals',
+  "Sandwich's",
   'HotDogs',
   'Kebabs',
   'Drinks',
@@ -62,7 +63,7 @@ export const MENU_ITEMS: FoodItem[] = [
   },
   {
     id: 'm4',
-    name: 'Warden’s Day Break',
+    name: 'Day Break Meal',
     category: 'Meal Deals',
     price: 44000,
     shortDescription: 'The Warden’s Day Break is a powerful meal designed to keep your energy high and your hunger locked down, packed with mouth watering flavours in every bite.',
@@ -74,10 +75,10 @@ export const MENU_ITEMS: FoodItem[] = [
   },
   {
     id: 'm5',
-    name: 'Tower Max',
+    name: 'Tower Max Meal',
     category: 'Meal Deals',
     price: 43000,
-    shortDescription: 'The Tower Max stacks high for serious flavour and is built to crush any appetite.',
+    shortDescription: 'Jailbirds’ special sauce, golden fries, creamy coleslaw, a juicy chicken burger, a freshly fried egg, and sliced onions, all sealed inside a fresh soft bun.',
     fullDescription: 'Includes:\n- Medium: Tower Max Burger + 250ml Drink + Medium Fries\n- Large: Tower Max Burger + 390ml Drink + Large Fries\n\nThe Tower Max stacks high for serious flavour and is built to crush any appetite. Layered with Jailbirds’ special sauce, golden fries, creamy coleslaw, a juicy chicken burger, a freshly fried egg, and sliced onions, all sealed inside a fresh soft bun.\n\nThis loaded tower meal is served with crispy fries and a cold drink of your choice — the ultimate feed when hunger hits hard.',
     deliveryCharge: 0,
     deliveryTime: '35-45 min',
@@ -86,7 +87,7 @@ export const MENU_ITEMS: FoodItem[] = [
   },
   {
     id: 'm6',
-    name: 'Chicken Max',
+    name: 'Chicken Max Meal',
     category: 'Meal Deals',
     price: 47000,
     shortDescription: 'Stacked high and built for serious appetite, the Chicken Max is loaded with bold Jailbirds flavour from top to bottom.',
@@ -95,6 +96,54 @@ export const MENU_ITEMS: FoodItem[] = [
     deliveryTime: '35-45 min',
     freeGift: 'FREE ATM Leather Jailbirds Wallet',
     image: 'https://ik.imagekit.io/7grri5v7d/ssssssssdddxxxx.png'
+  },
+  {
+    id: 's1',
+    name: 'Toasted Chicken',
+    category: "Sandwich's",
+    price: 28000,
+    shortDescription: 'Pressed and toasted to lock in the flavour. This compact, flavour-packed sandwich is loaded with tender seasoned chicken, sweet caramelised onions, fresh tomatoes, and melted cheese.',
+    fullDescription: 'Pressed and toasted to lock in the flavour. This compact, flavour-packed sandwich is loaded with tender seasoned chicken, sweet caramelised onions, fresh tomatoes, and melted cheese. Toasted until golden and crispy on the outside, hot, rich, and perfectly melted inside.\n\nWarm, cheesy, and satisfying in every bite.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/ssssssssdddxxxxnn.png'
+  },
+  {
+    id: 's2',
+    name: 'Smoked Beef Toasted',
+    category: "Sandwich's",
+    price: 29000,
+    shortDescription: 'Pressed and toasted to lock in the flavour. This compact, flavour-packed sandwich is loaded with smoky sliced beef, sweet caramelised onions, fresh tomatoes, and melted cheese.',
+    fullDescription: 'Pressed and toasted to lock in the flavour. This compact, flavour-packed sandwich is loaded with smoky sliced beef, sweet caramelised onions, fresh tomatoes, and melted cheese. Grilled until golden and crispy on the outside, hot and rich on the inside.\n\nEvery bite is warm, cheesy, smoky perfection.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/smokey%20toastedd.png'
+  },
+  {
+    id: 's3',
+    name: 'Special Chicken + Coleslaw',
+    category: "Sandwich's",
+    price: 38000,
+    shortDescription: 'Toasted Special Chicken Sandwich with a fresh coleslaw portion, pressed and toasted to lock in the flavour.',
+    fullDescription: 'Toasted Special Chicken Sandwich with a fresh coleslaw portion, pressed and toasted to lock in the flavour. Filled with tender seasoned chicken, sweet caramelised onions, fresh tomatoes, melted cheese, and creamy coleslaw. Crispy outside, soft and savoury inside, delicious in every bite.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/smokey%20toasteddss.png?updatedAt=1772631045935'
+  },
+  {
+    id: 's4',
+    name: 'Chicken Salad Sandwich',
+    category: "Sandwich's",
+    price: 38000,
+    shortDescription: 'Freshly made with soft white bread layered with creamy mayonnaise, crisp lettuce, and juicy tomatoes.',
+    fullDescription: 'Freshly made with soft white bread layered with creamy mayonnaise, crisp lettuce, and juicy tomatoes. Filled with tender grated chicken, sliced cheese, fresh onion, and an extra touch of mayo for rich, smooth flavour, then finished with a top layer of soft bread.\n\nLight, fresh, and satisfying — with the option to enjoy it with a freshly brewed coffee for the perfect combo.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20sandwichss.png'
   },
   {
     id: 'h1',
