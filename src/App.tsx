@@ -787,7 +787,7 @@ const WardensOffice = () => {
   return (
     <div
       className="pt-32 pb-20 min-h-screen w-full bg-cover bg-center"
-      style={{ backgroundImage: "url('/images/warden-bg.jpg')" }}
+      style={{ backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/jailbirds%20food%20main%20imagessss.png')" }}
     >
       <div className="max-w-7xl mx-auto px-4">
       <div className="text-center mb-16">
