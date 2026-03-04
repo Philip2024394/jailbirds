@@ -7,7 +7,6 @@ import {
   Flame, 
   Clock, 
   Gift, 
-  Truck, 
   ChevronRight, 
   Plus, 
   Minus,
@@ -25,11 +24,14 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { CATEGORIES, MENU_ITEMS, REWARDS } from './constants';
-import { Category, FoodItem, CartCustomization, CartLineItem, SmallDrinkOption } from './types';
+import { Category, FoodItem, CartCustomization, CartLineItem, MealSize, SauceFlavor, SmallDrinkOption } from './types';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+const DELIVERY_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/scooter%20jailbirds.png';
+const ETA_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/cooking_s-removebg-preview.png';
 
 type DeliveryZoneId = 'A' | 'B' | 'C';
 
@@ -51,13 +53,72 @@ const DELIVERY_ZONES: Array<{
   { id: 'C', label: 'Zone C – Rp 20,000 (6–9 km)', fee: 20_000, minKm: 6, maxKm: 9, minOrder: 75_000 },
 ];
 
+const DEFAULT_DELIVERY_FEE = Math.min(...DELIVERY_ZONES.map(z => z.fee));
+
+const deliveryFeeForZone = (zone: DeliveryZoneId | null) => {
+  if (!zone) return DEFAULT_DELIVERY_FEE;
+  return DELIVERY_ZONES.find(z => z.id === zone)?.fee ?? DEFAULT_DELIVERY_FEE;
+};
+
 const EXTRA_PRICES: Record<string, number> = {
   'Extra Cheese': 5000,
   'Extra Sauce': 4000,
   'Bacon': 8000,
+  'Onion': 3000,
+  'Cheese': 2200,
+  'Tamatoe': 3000,
+  'Sausage': 5000,
+  'Fried Egg': 3500,
+  'Onion (Parole)': 2500,
+  'Tamatoe Fried': 3000,
+  'Fried Tamatoe': 3000,
+  'Sauce': 0,
 };
 
+const SAUCE_FLAVORS: SauceFlavor[] = ['Chilli', 'BBQ', 'Cheese', 'Tamatoe', 'Mayonaise'];
+
 const SMALL_DRINK_PRICE = 8000;
+
+const MEAL_SIZES_DEFAULT: Array<{ id: MealSize; label: string; price: number; includes: string }> = [
+  { id: 'Medium', label: 'Medium', price: 45_000, includes: '250ml Drink + Medium Fries' },
+  { id: 'Large', label: 'Large', price: 53_000, includes: '390ml Drink + Large Fries' },
+];
+
+const mealSizesForItem = (item: FoodItem) => {
+  if (item.id === 'm2') {
+    return [
+      { id: 'Medium' as const, label: 'Medium (Rp 45,000)', price: 45_000, includes: 'Tower Burger + 250ml Drink + Medium Fries' },
+      { id: 'Large' as const, label: 'Large (Rp 53,000)', price: 53_000, includes: 'Tower Burger + 390ml Drink + Large Fries' },
+    ];
+  }
+  if (item.id === 'm3') {
+    return [
+      { id: 'Medium' as const, label: 'Medium (Rp 48,000)', price: 48_000, includes: 'Warden’s Parole Burger + 250ml Drink + Medium Fries' },
+      { id: 'Large' as const, label: 'Large (Rp 56,000)', price: 56_000, includes: 'Warden’s Parole Burger + 390ml Drink + Large Fries' },
+    ];
+  }
+  if (item.id === 'm4') {
+    return [
+      { id: 'Medium' as const, label: 'Medium (Rp 46,000)', price: 46_000, includes: 'Warden’s Day Break Burger + 250ml Drink + Medium Fries' },
+      { id: 'Large' as const, label: 'Large (Rp 44,000)', price: 44_000, includes: 'Warden’s Day Break Burger + 390ml Drink + Large Fries' },
+    ];
+  }
+  if (item.id === 'm5') {
+    return [
+      { id: 'Medium' as const, label: 'Medium (Rp 43,000)', price: 43_000, includes: 'Tower Max Burger + 250ml Drink + Medium Fries' },
+      { id: 'Large' as const, label: 'Large (Rp 49,000)', price: 49_000, includes: 'Tower Max Burger + 390ml Drink + Large Fries' },
+    ];
+  }
+  if (item.id === 'm6') {
+    return [
+      { id: 'Medium' as const, label: 'Medium (Rp 47,000)', price: 47_000, includes: 'Chicken Max Burger + 250ml Drink + Medium Fries' },
+      { id: 'Large' as const, label: 'Large (Rp 56,000)', price: 56_000, includes: 'Chicken Max Burger + 390ml Drink + Large Fries' },
+    ];
+  }
+  return MEAL_SIZES_DEFAULT.map(s => ({ ...s, label: `${s.id} (Rp ${s.price.toLocaleString()})` }));
+};
+
+const mealSizeIncludes = (item: FoodItem, size: MealSize) => (mealSizesForItem(item).find(s => s.id === size)?.includes ?? '');
 
 const toRad = (deg: number) => (deg * Math.PI) / 180;
 
@@ -89,7 +150,15 @@ const cartLineItemSubtotal = (item: CartLineItem) => {
     0
   );
   const drinkTotal = item.customization.smallDrink ? SMALL_DRINK_PRICE : 0;
-  const perUnit = item.price + extrasTotal + drinkTotal;
+
+  const mealSizeTotal = (() => {
+    if (item.category !== 'Meal Deals') return 0;
+    const size = item.customization.mealSize ?? 'Medium';
+    const price = (mealSizesForItem(item).find(s => s.id === size)?.price ?? item.price);
+    return Math.max(0, price - item.price);
+  })();
+
+  const perUnit = item.price + extrasTotal + drinkTotal + mealSizeTotal;
   return perUnit * item.quantity;
 };
 
@@ -200,7 +269,8 @@ const Navbar = ({ activePage, setActivePage, cartCount }: {
   );
 };
 
-const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?: string }) => {
+const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: () => void, selectedZone: DeliveryZoneId | null, key?: string }) => {
+  const deliveryFee = useMemo(() => deliveryFeeForZone(selectedZone), [selectedZone]);
   return (
     <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
       <motion.div
@@ -256,7 +326,7 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
           </h3>
         </div>
         
-        <p className="text-white/55 text-[10px] md:text-xs line-clamp-2 mb-3 font-medium italic">
+        <p className="text-white/55 text-[10px] md:text-xs line-clamp-3 mb-3 font-medium italic">
           {item.shortDescription}
         </p>
 
@@ -264,14 +334,24 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
           {/* Delivery Info */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 flex items-center gap-2">
-              <Truck className="w-4 h-4 text-white/40" />
+              <img
+                src={DELIVERY_ICON_URL}
+                alt="Delivery"
+                className="w-[32px] h-[32px] object-contain opacity-60 -scale-x-100"
+                referrerPolicy="no-referrer"
+              />
               <div className="min-w-0">
                 <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Delivery</p>
-                <p className="text-[10px] font-black text-white/70 truncate">Rp {item.deliveryCharge.toLocaleString()}</p>
+                <p className="text-[10px] font-black text-white/70 truncate">Rp {deliveryFee.toLocaleString()}</p>
               </div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-white/40" />
+              <img
+                src={ETA_ICON_URL}
+                alt="ETA"
+                className="w-[29px] h-[29px] object-contain opacity-60"
+                referrerPolicy="no-referrer"
+              />
               <div className="min-w-0">
                 <p className="text-[9px] font-black uppercase tracking-widest text-white/40">ETA</p>
                 <p className="text-[10px] font-black text-white/70 truncate">{item.deliveryTime}</p>
@@ -291,18 +371,34 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
   );
 };
 
-const FoodDrawer = ({ item, onClose, onAddToCart }: { 
+const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: { 
   item: FoodItem | null, 
   onClose: () => void,
-  onAddToCart: (item: FoodItem, customization: CartCustomization, quantity: number) => void
+  onAddToCart: (item: FoodItem, customization: CartCustomization, quantity: number) => void,
+  selectedZone: DeliveryZoneId | null
 }) => {
   if (!item) return null;
+
+  const deliveryFee = useMemo(() => deliveryFeeForZone(selectedZone), [selectedZone]);
 
   const isMealDeal = item.category === 'Meal Deals';
   const showSmallDrinkAddOn = !isMealDeal && item.category !== 'Drinks';
 
-  const EXTRA_OPTIONS = ['Extra Cheese', 'Extra Sauce', 'Bacon'];
-  const REMOVAL_OPTIONS = ['No Onions', 'No Pickles', 'No Mayo'];
+  const EXTRA_OPTIONS = useMemo(() => {
+    if (item.id === 'm2') return ['Onion', 'Cheese', 'Tamatoe'];
+    if (item.id === 'm3') return ['Sausage', 'Fried Egg', 'Onion (Parole)', 'Tamatoe Fried', 'Extra Sauce'];
+    if (item.id === 'm5') return ['Fried Egg', 'Fried Tamatoe', 'Sauce'];
+    if (item.id === 'm6') return ['Cheese', 'Fried Tamatoe', 'Sauce'];
+    return ['Extra Cheese', 'Extra Sauce', 'Bacon'];
+  }, [item.id]);
+
+  const REMOVAL_OPTIONS = useMemo(() => {
+    if (item.id === 'm2') return ['Cheese', 'Onion', 'Tamatoes', 'Lettuce', 'Sauce'];
+    if (item.id === 'm3') return ['Fried Egg', 'Sauced Beans', 'Fries', 'Jailbirds Sauce'];
+    if (item.id === 'm5') return ['Fried Egg', 'Fried Onion', 'Fries', 'Jailbirds Sauce'];
+    if (item.id === 'm6') return ['Fried Egg', 'Cheese', 'Fried Onion', 'Beans', 'Jailbirds Sauce'];
+    return ['No Onions', 'No Pickles', 'No Mayo'];
+  }, [item.id]);
   const SMALL_DRINK_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta'];
 
   const SMALL_DRINK_ICONS: Record<SmallDrinkOption, string> = {
@@ -312,20 +408,43 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
     'Fanta': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#ea580c"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">F</text></svg>')}`,
   };
 
-  const [extrasSelected, setExtrasSelected] = useState<Record<string, boolean>>(() => {
-    return EXTRA_OPTIONS.reduce<Record<string, boolean>>((acc, opt) => {
-      acc[opt] = false;
-      return acc;
-    }, {});
-  });
-  const [removals, setRemovals] = useState<Record<string, boolean>>(() => {
-    return REMOVAL_OPTIONS.reduce<Record<string, boolean>>((acc, opt) => {
-      acc[opt] = false;
-      return acc;
-    }, {});
-  });
+  const [extrasSelected, setExtrasSelected] = useState<Record<string, boolean>>({});
+  const [removals, setRemovals] = useState<Record<string, boolean>>({});
   const [smallDrink, setSmallDrink] = useState<SmallDrinkOption | null>(null);
+  const [mealSize, setMealSize] = useState<MealSize>('Medium');
+  const [mealDrink, setMealDrink] = useState<SmallDrinkOption | null>(null);
+  const [extraSauceFlavor, setExtraSauceFlavor] = useState<SauceFlavor | ''>('');
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    setExtrasSelected(
+      EXTRA_OPTIONS.reduce<Record<string, boolean>>((acc, opt) => {
+        acc[opt] = false;
+        return acc;
+      }, {})
+    );
+    setRemovals(
+      REMOVAL_OPTIONS.reduce<Record<string, boolean>>((acc, opt) => {
+        acc[opt] = false;
+        return acc;
+      }, {})
+    );
+    setSmallDrink(null);
+    setExtraSauceFlavor('');
+    setQuantity(1);
+  }, [EXTRA_OPTIONS, REMOVAL_OPTIONS, item.id]);
+
+  useEffect(() => {
+    if (!isMealDeal) return;
+    setMealSize('Medium');
+    setMealDrink(null);
+  }, [isMealDeal, item.id]);
+
+  useEffect(() => {
+    if (!EXTRA_OPTIONS.includes('Extra Sauce') || !extrasSelected['Extra Sauce']) {
+      setExtraSauceFlavor('');
+    }
+  }, [extrasSelected, EXTRA_OPTIONS]);
 
   const selectedExtras = useMemo(() => {
     return (Object.entries(extrasSelected) as [string, boolean][]).filter(([, v]) => v).map(([k]) => k);
@@ -343,9 +462,15 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
     return showSmallDrinkAddOn && smallDrink ? SMALL_DRINK_PRICE : 0;
   }, [SMALL_DRINK_PRICE, showSmallDrinkAddOn, smallDrink]);
 
+  const mealSizeTotal = useMemo(() => {
+    if (!isMealDeal) return 0;
+    const sizePrice = mealSizesForItem(item).find(s => s.id === mealSize)?.price ?? item.price;
+    return Math.max(0, sizePrice - item.price);
+  }, [isMealDeal, item.price, mealSize]);
+
   const lineTotal = useMemo(() => {
-    return (item.price + extrasTotal + drinkTotal) * quantity;
-  }, [drinkTotal, extrasTotal, item.price, quantity]);
+    return (item.price + mealSizeTotal + extrasTotal + drinkTotal) * quantity;
+  }, [drinkTotal, extrasTotal, item.price, mealSizeTotal, quantity]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
@@ -412,11 +537,27 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
               </p>
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                  <p className="text-[10px] text-white/40 uppercase font-black mb-1">Delivery</p>
-                  <p className="text-sm font-black">Rp {item.deliveryCharge.toLocaleString()}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <img
+                      src={DELIVERY_ICON_URL}
+                      alt="Delivery"
+                      className="w-[32px] h-[32px] object-contain opacity-60 -scale-x-100"
+                      referrerPolicy="no-referrer"
+                    />
+                    <p className="text-[10px] text-white/40 uppercase font-black">Delivery</p>
+                  </div>
+                  <p className="text-sm font-black">Rp {deliveryFee.toLocaleString()}</p>
                 </div>
                 <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                  <p className="text-[10px] text-white/40 uppercase font-black mb-1">Time</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <img
+                      src={ETA_ICON_URL}
+                      alt="Time"
+                      className="w-[29px] h-[29px] object-contain opacity-60"
+                      referrerPolicy="no-referrer"
+                    />
+                    <p className="text-[10px] text-white/40 uppercase font-black">Time</p>
+                  </div>
                   <p className="text-sm font-black">{item.deliveryTime}</p>
                 </div>
               </div>
@@ -459,6 +600,72 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
                 </div>
               </div>
             </div>
+
+            {isMealDeal && (
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                <div className="mb-3">
+                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Meal Size</p>
+                  <p className="text-xs text-white/50 font-bold italic">Medium or Large</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {mealSizesForItem(item).map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setMealSize(s.id)}
+                      className={cn(
+                        "text-left px-3 py-2 rounded-xl border text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-between gap-2",
+                        mealSize === s.id
+                          ? "bg-prison-orange text-black border-black"
+                          : "bg-white/5 text-white/80 border-white/10 hover:border-prison-orange/40"
+                      )}
+                    >
+                      <span className="truncate">{s.id}</span>
+                      <span
+                        className={cn(
+                          "text-[10px] font-black",
+                          mealSize === s.id ? "text-black/70" : "text-white/40"
+                        )}
+                      >
+                        Rp {s.price.toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {isMealDeal && (
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                <div className="mb-3">
+                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Soft Drink (Required)</p>
+                  <p className="text-xs text-white/50 font-bold italic">Choose 1 for your meal</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {SMALL_DRINK_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setMealDrink(opt)}
+                      className={cn(
+                        "text-left px-3 py-2 rounded-xl border text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2",
+                        mealDrink === opt
+                          ? "bg-prison-orange text-black border-black"
+                          : "bg-white/5 text-white/80 border-white/10 hover:border-prison-orange/40"
+                      )}
+                    >
+                      <img src={SMALL_DRINK_ICONS[opt]} alt={opt} className="w-5 h-5 rounded" />
+                      <span className="truncate flex-grow">{opt}</span>
+                    </button>
+                  ))}
+                </div>
+                {!mealDrink && (
+                  <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-red-300">
+                    Please select a soft drink for this meal.
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
               <div className="mb-3">
@@ -507,6 +714,22 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
                   );
                 })}
               </div>
+
+              {EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce'] && (
+                <div className="mt-3">
+                  <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Sauce Selection</label>
+                  <select
+                    value={extraSauceFlavor}
+                    onChange={(e) => setExtraSauceFlavor(e.target.value as SauceFlavor | '')}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
+                  >
+                    <option value="" disabled>Select sauce</option>
+                    {SAUCE_FLAVORS.map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-md p-4 md:p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
@@ -587,13 +810,18 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
           </div>
 
           <div className="sticky bottom-0 left-0 right-0 mt-6 pb-4">
-            {(selectedExtras.length > 0 || selectedRemovals.length > 0 || (showSmallDrinkAddOn && smallDrink)) && (
+            {(isMealDeal || selectedExtras.length > 0 || selectedRemovals.length > 0 || (showSmallDrinkAddOn && smallDrink)) && (
               <div className="mb-3 bg-prison-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-3">
                 <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Selected</p>
                 <div className="text-xs font-bold text-white/75 space-y-1">
+                  {isMealDeal && (
+                    <div>
+                      Meal: {mealSize} ({mealSizeIncludes(item, mealSize)}){mealDrink ? ` • ${mealDrink}` : ''}
+                    </div>
+                  )}
                   {selectedExtras.length > 0 && (
                     <div>
-                      + {selectedExtras.join(', ')}
+                      + {selectedExtras.map(e => e === 'Extra Sauce' && extraSauceFlavor ? `Extra Sauce: ${extraSauceFlavor}` : e).join(', ')}
                     </div>
                   )}
                   {selectedRemovals.length > 0 && (
@@ -611,6 +839,8 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
             )}
             <button
               onClick={() => {
+                if (isMealDeal && !mealDrink) return;
+                if (EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce'] && !extraSauceFlavor) return;
                 const customization: CartCustomization = {
                   extras: Object.fromEntries(
                     (Object.entries(extrasSelected) as [string, boolean][]) 
@@ -619,11 +849,15 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
                   ) as Record<string, number>,
                   removals: (Object.entries(removals) as [string, boolean][]).filter(([, v]) => v).map(([k]) => k),
                   smallDrink: showSmallDrinkAddOn ? smallDrink : null,
+                  mealSize: isMealDeal ? mealSize : null,
+                  mealDrink: isMealDeal ? mealDrink : null,
+                  extraSauceFlavor: (EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce']) ? (extraSauceFlavor || null) : null,
                 };
 
                 onAddToCart(item, customization, quantity);
                 onClose();
               }}
+              disabled={(isMealDeal && !mealDrink) || (EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce'] && !extraSauceFlavor)}
               className="w-full orange-gradient-glow text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase tracking-tighter transition-all active:scale-[0.99] hover:brightness-110 shadow-2xl"
             >
               <ShieldAlert className="w-5 h-5" />
@@ -638,7 +872,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
 
 // --- Pages ---
 
-const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) => {
+const HomePage = ({ onSelectItem, selectedZone }: { onSelectItem: (item: FoodItem) => void; selectedZone: DeliveryZoneId | null }) => {
   const [activeCategory, setActiveCategory] = useState<Category>('Burgers');
 
   const filteredItems = useMemo(() => {
@@ -718,44 +952,33 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
       </section>
 
       {/* Menu Grid — mobile-first: menu pulled up; desktop: normal spacing */}
-      <section id="menu" className="pt-0 pb-12 md:pb-12 max-w-7xl mx-auto px-4 md:px-4 scroll-mt-20 -mt-[160px] md:mt-6 relative z-30">
-        {/* Mobile: floating category buttons — barbed wire frame on each button + container rim */}
-        <div className="menu-category-float md:hidden">
-          <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl py-3 px-2 flex flex-col items-center gap-3">
-            {CATEGORIES.map((cat) => {
-              const Icon = CATEGORY_ICONS[cat];
-              return (
-                <div key={cat} className="barbed-wire-card-wrapper rounded-full p-0.5">
-                  <button
-                    onClick={() => {
-                      setActiveCategory(cat);
-                      document.getElementById('menu-cards')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }}
-                    className={cn(
-                      "w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md barbed-wire-border",
-                      activeCategory === cat
-                        ? "bg-prison-orange text-black scale-110 orange-glow"
-                        : "bg-prison-grey/90 text-white/80 hover:text-white active:scale-95"
-                    )}
-                    title={cat}
-                    aria-label={cat}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+      <section id="menu" className="pt-0 pb-12 md:pb-12 max-w-7xl mx-auto px-4 md:px-4 scroll-mt-20 -mt-[80px] md:mt-6 relative z-30">
         <div className="min-h-[60vh] md:min-h-0">
           {/* Menu cards area — full width frame, no clipping */}
-          <div id="menu-cards" className="min-w-0 overflow-visible pr-14 md:pr-0">
+          <div id="menu-cards" className="min-w-0 overflow-visible">
             {/* Mobile: category label */}
-            <div className="md:hidden mb-3">
+            <div className="md:hidden mb-2">
               <h2 className="text-prison-orange font-black text-lg uppercase tracking-tighter industrial-font">
                 {activeCategory}
               </h2>
+              <div className="mt-2 -mx-4 px-4 overflow-x-auto max-w-full">
+                <div className="flex items-center gap-2 w-max pr-4">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={cn(
+                        "px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all brutal-border whitespace-nowrap",
+                        activeCategory === cat
+                          ? "bg-prison-orange text-black border-black"
+                          : "bg-prison-black/60 text-white/70 border-white/10"
+                      )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
               <AnimatePresence mode="wait">
@@ -771,6 +994,7 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
                     <FoodCard 
                       item={item} 
                       onClick={() => onSelectItem(item)} 
+                      selectedZone={selectedZone}
                     />
                   </motion.div>
                 ))}
@@ -875,11 +1099,14 @@ const StoryPage = () => {
   );
 };
 
-const CartPage = ({ cart, updateQuantity, checkout }: { 
+const CartPage = ({ cart, updateQuantity, selectedZone, onSelectedZoneChange, checkout }: { 
   cart: CartLineItem[], 
   updateQuantity: (lineId: string, delta: number) => void,
+  selectedZone: DeliveryZoneId | null,
+  onSelectedZoneChange: (zone: DeliveryZoneId | null) => void,
   checkout: (details: {
     name: string;
+    customerWhatsapp: string;
     address: string;
     kecamatan?: string;
     zone: DeliveryZoneId;
@@ -889,12 +1116,17 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
   }) => void
 }) => {
   const [name, setName] = useState('');
+  const [customerWhatsapp, setCustomerWhatsapp] = useState('');
   const [address, setAddress] = useState('');
 
   const [kecamatan, setKecamatan] = useState('');
   const [zone, setZone] = useState<DeliveryZoneId | ''>('');
   const [pinLat, setPinLat] = useState('');
   const [pinLng, setPinLng] = useState('');
+
+  useEffect(() => {
+    setZone(selectedZone ?? '');
+  }, [selectedZone]);
 
   const pin = useMemo(() => {
     const lat = Number(pinLat);
@@ -940,8 +1172,13 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
     return subtotal < selectedZoneConfig.minOrder;
   }, [selectedZoneConfig, subtotal]);
 
+  const normalizedCustomerWhatsapp = useMemo(() => {
+    return customerWhatsapp.replace(/[^0-9]/g, '');
+  }, [customerWhatsapp]);
+
   const blockingMessage = useMemo(() => {
     if (!name.trim() || !address.trim()) return null;
+    if (!normalizedCustomerWhatsapp) return 'Customer WhatsApp number is required.';
     if (!zone) return 'Delivery zone is required.';
     if (!pin) return 'Please enter your map pin coordinates (latitude & longitude).';
     if (distanceKm == null) return 'Unable to calculate distance. Please check your pin coordinates.';
@@ -949,7 +1186,7 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
     if (zoneMismatch) return 'Selected zone does not match your location. Please choose correct zone.';
     if (minOrderNotReached) return 'Minimum order for your zone has not been reached.';
     return null;
-  }, [address, deliveryUnavailable, distanceKm, minOrderNotReached, name, pin, zone, zoneMismatch]);
+  }, [address, deliveryUnavailable, distanceKm, minOrderNotReached, name, normalizedCustomerWhatsapp, pin, zone, zoneMismatch]);
 
   if (cart.length === 0) {
     return (
@@ -977,11 +1214,22 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
                 <h3 className="font-bold uppercase text-sm">{item.name}</h3>
                 <p className="text-prison-orange font-bold text-xs">Rp {item.price.toLocaleString()}</p>
 
-                {(Object.keys(item.customization.extras).length > 0 || item.customization.removals.length > 0 || item.customization.smallDrink) && (
+                {(Object.keys(item.customization.extras).length > 0 || item.customization.removals.length > 0 || item.customization.smallDrink || item.customization.mealSize || item.customization.mealDrink || item.customization.extraSauceFlavor) && (
                   <div className="mt-2 text-[10px] text-white/50 font-bold uppercase tracking-widest space-y-1">
+                    {(item.category === 'Meal Deals' && (item.customization.mealSize || item.customization.mealDrink)) && (
+                      <div>
+                        {(() => {
+                          const size = item.customization.mealSize ?? 'Medium';
+                          return `Meal: ${size} (${mealSizeIncludes(item, size)})${item.customization.mealDrink ? ` • ${item.customization.mealDrink}` : ''}`;
+                        })()}
+                      </div>
+                    )}
                     {Object.keys(item.customization.extras).length > 0 && (
                       <div>
-                        + {Object.entries(item.customization.extras).map(([k, v]) => `${k}${v > 1 ? ` x${v}` : ''}`).join(', ')}
+                        + {Object.entries(item.customization.extras).map(([k, v]) => {
+                          if (k === 'Extra Sauce' && item.customization.extraSauceFlavor) return `Extra Sauce: ${item.customization.extraSauceFlavor}${v > 1 ? ` x${v}` : ''}`;
+                          return `${k}${v > 1 ? ` x${v}` : ''}`;
+                        }).join(', ')}
                       </div>
                     )}
                     {item.customization.removals.length > 0 && (
@@ -1033,6 +1281,17 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
               />
             </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Customer WhatsApp Number (Required)</label>
+              <input
+                value={customerWhatsapp}
+                onChange={(e) => setCustomerWhatsapp(e.target.value)}
+                placeholder="Example: +62 812 3456 7890"
+                inputMode="tel"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
+              />
+            </div>
             <div>
               <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Cell Block Address (Yogyakarta)</label>
               <textarea 
@@ -1058,7 +1317,11 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
               <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Delivery Zone (Required)</label>
               <select
                 value={zone}
-                onChange={(e) => setZone(e.target.value as DeliveryZoneId | '')}
+                onChange={(e) => {
+                  const next = (e.target.value as DeliveryZoneId | '');
+                  setZone(next);
+                  onSelectedZoneChange(next || null);
+                }}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
               >
                 <option value="" disabled>Select your zone</option>
@@ -1100,6 +1363,13 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
                 </div>
               )}
             </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Proof of Payment</p>
+              <p className="text-xs font-bold text-white/70 italic mt-1">
+                After payment, please send a screenshot of your transfer directly in WhatsApp chat.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1132,6 +1402,7 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
               if (!zone || !pin || distanceKm == null || !selectedZoneConfig) return;
               checkout({
                 name: name.trim(),
+                customerWhatsapp: normalizedCustomerWhatsapp,
                 address: address.trim(),
                 kecamatan: kecamatan.trim() || undefined,
                 zone,
@@ -1157,24 +1428,37 @@ export default function App() {
   const [activePage, setActivePage] = useState('home');
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [cart, setCart] = useState<CartLineItem[]>([]);
+  const [selectedDeliveryZone, setSelectedDeliveryZone] = useState<DeliveryZoneId | null>(null);
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const addToCart = (item: FoodItem, customization: CartCustomization, quantity: number) => {
     setCart(prev => {
-      const hasCustomization = Object.keys(customization.extras).length > 0 || customization.removals.length > 0 || !!customization.smallDrink;
+      const hasCustomization = Object.keys(customization.extras).length > 0 || customization.removals.length > 0 || !!customization.smallDrink || !!customization.mealSize || !!customization.mealDrink;
 
       const qty = Math.max(1, Math.min(10, quantity || 1));
 
       if (!hasCustomization) {
-        const existing = prev.find(i => i.id === item.id && Object.keys(i.customization.extras).length === 0 && i.customization.removals.length === 0 && !i.customization.smallDrink);
+        const existing = prev.find(i => i.id === item.id && Object.keys(i.customization.extras).length === 0 && i.customization.removals.length === 0 && !i.customization.smallDrink && !i.customization.mealSize && !i.customization.mealDrink);
         if (existing) {
           return prev.map(i => i.lineId === existing.lineId ? { ...i, quantity: i.quantity + qty } : i);
         }
       }
 
       const lineId = `${item.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      return [...prev, { ...item, lineId, quantity: qty, customization: { extras: customization.extras, removals: customization.removals, smallDrink: customization.smallDrink ?? null } }];
+      return [...prev, {
+        ...item,
+        lineId,
+        quantity: qty,
+        customization: {
+          extras: customization.extras,
+          removals: customization.removals,
+          smallDrink: customization.smallDrink ?? null,
+          mealSize: customization.mealSize ?? null,
+          mealDrink: customization.mealDrink ?? null,
+          extraSauceFlavor: customization.extraSauceFlavor ?? null,
+        }
+      }];
     });
   };
 
@@ -1192,6 +1476,7 @@ export default function App() {
 
   const handleCheckout = (details: {
     name: string;
+    customerWhatsapp: string;
     address: string;
     kecamatan?: string;
     zone: DeliveryZoneId;
@@ -1199,13 +1484,23 @@ export default function App() {
     distanceKm: number;
     deliveryFee: number;
   }) => {
-    const { name, address, kecamatan, zone, pin, distanceKm, deliveryFee } = details;
+    const { name, customerWhatsapp, address, kecamatan, zone, pin, distanceKm, deliveryFee } = details;
     const itemsList = cart.map(item => {
-      const extras = (Object.entries(item.customization.extras) as [string, number][])?.map(([k, v]) => `${k}${v > 1 ? ` x${v}` : ''}`);
+      const extras = (Object.entries(item.customization.extras) as [string, number][])?.map(([k, v]) => {
+        if (k === 'Extra Sauce' && item.customization.extraSauceFlavor) return `Extra Sauce: ${item.customization.extraSauceFlavor}${v > 1 ? ` x${v}` : ''}`;
+        return `${k}${v > 1 ? ` x${v}` : ''}`;
+      });
       const removals = item.customization.removals;
       const smallDrinkLine = item.customization.smallDrink ? [`Small Drink 250ml: ${item.customization.smallDrink}`] : [];
+      const mealLines = item.category === 'Meal Deals'
+        ? [
+            `Meal Size: ${item.customization.mealSize ?? 'Medium'} (${mealSizeIncludes(item, item.customization.mealSize ?? 'Medium')})`,
+            ...(item.customization.mealDrink ? [`Meal Drink: ${item.customization.mealDrink}`] : []),
+          ]
+        : [];
       const options = [...extras.map(e => `+ ${e}`), ...removals.map(r => `- ${r}`), ...smallDrinkLine.map(s => `+ ${s}`)];
-      const optionsText = options.length > 0 ? `%0A  ${options.join('%0A  ')}` : '';
+      const optionLines = [...mealLines.map(m => `+ ${m}`), ...options];
+      const optionsText = optionLines.length > 0 ? `%0A  ${optionLines.join('%0A  ')}` : '';
       return `- ${item.name} (x${item.quantity})${optionsText}`;
     }).join('%0A');
 
@@ -1220,10 +1515,9 @@ export default function App() {
     ];
     if (kecamatan) deliveryLines.splice(1, 0, `*Kecamatan:* ${kecamatan}`);
     
-    const message = `*NEW ORDER FROM THE JAILBIRD*%0A%0A*Customer:* ${name}%0A*Address:* ${address}%0A%0A${deliveryLines.join('%0A')}%0A%0A*Items:*%0A${itemsList}%0A%0A*Subtotal:* Rp ${itemsSubtotal.toLocaleString()}%0A*Total:* Rp ${total.toLocaleString()}%0A%0A_Sent from The Jailbird PWA_`;
+    const message = `*NEW ORDER FROM THE JAILBIRD*%0A%0A*Customer:* ${name}%0A*Customer WA:* ${customerWhatsapp}%0A*Address:* ${address}%0A%0A${deliveryLines.join('%0A')}%0A%0A*Items:*%0A${itemsList}%0A%0A*Subtotal:* Rp ${itemsSubtotal.toLocaleString()}%0A*Total:* Rp ${total.toLocaleString()}%0A%0A_Sent from The Jailbird PWA_`;
     
-    // Replace with actual WhatsApp number
-    const whatsappNumber = '6281234567890'; 
+    const whatsappNumber = '6281392000050';
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
   };
 
@@ -1248,7 +1542,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <HomePage onSelectItem={setSelectedItem} />
+              <HomePage onSelectItem={setSelectedItem} selectedZone={selectedDeliveryZone} />
             </motion.div>
           )}
           {activePage === 'warden' && (
@@ -1281,6 +1575,8 @@ export default function App() {
               <CartPage 
                 cart={cart} 
                 updateQuantity={updateQuantity} 
+                selectedZone={selectedDeliveryZone}
+                onSelectedZoneChange={setSelectedDeliveryZone}
                 checkout={handleCheckout} 
               />
             </motion.div>
@@ -1294,6 +1590,7 @@ export default function App() {
             item={selectedItem} 
             onClose={() => setSelectedItem(null)} 
             onAddToCart={addToCart}
+            selectedZone={selectedDeliveryZone}
           />
         )}
       </AnimatePresence>

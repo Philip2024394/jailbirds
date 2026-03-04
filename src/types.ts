@@ -4,6 +4,10 @@ export type Category = 'Burgers' | 'Meal Deals' | 'HotDogs' | 'Kebabs' | 'Drinks
 
 export type SmallDrinkOption = 'Coca Cola' | 'Sprite' | 'Aqua' | 'Fanta';
 
+export type MealSize = 'Medium' | 'Large';
+
+export type SauceFlavor = 'Chilli' | 'BBQ' | 'Cheese' | 'Tamatoe' | 'Mayonaise';
+
 export interface FoodItem {
   id: string;
   name: string;
@@ -26,6 +30,9 @@ export interface CartCustomization {
   extras: Record<string, number>;
   removals: string[];
   smallDrink?: SmallDrinkOption | null;
+  mealSize?: MealSize | null;
+  mealDrink?: SmallDrinkOption | null;
+  extraSauceFlavor?: SauceFlavor | null;
 }
 
 export interface CartLineItem extends FoodItem {

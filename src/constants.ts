@@ -37,16 +37,64 @@ export const MENU_ITEMS: FoodItem[] = [
     image: 'https://picsum.photos/seed/burger2/600/600'
   },
   {
-    id: 'm1',
-    name: 'The Warden\'s Meal',
+    id: 'm2',
+    name: 'JailYard Tower Meal',
     category: 'Meal Deals',
-    price: 85000,
-    shortDescription: 'Burger, Fries, Drink & a Mystery Gift.',
-    fullDescription: 'The ultimate combo. Choose any signature burger, comes with a large portion of our seasoned "Barbed Wire" fries, a cold drink of your choice, and a mystery gift from the Warden.',
+    price: 45000,
+    shortDescription: 'A crispy, golden chicken fillet topped with melted cheese, fresh sliced tomatoes, crunchy iceberg lettuce, and sliced onions, all packed inside a soft, freshly baked bun.',
+    fullDescription: 'Includes:\n- Medium: Tower Burger + 250ml Drink + Medium Fries\n- Large: Tower Burger + 390ml Drink + Large Fries\n\nStep into the yard with the Jail Yard Tower – a stacked-up chicken burger built for serious hunger.\n\nA crispy, golden chicken fillet topped with melted cheese, fresh sliced tomatoes, crunchy iceberg lettuce, and sliced onions, all packed inside a soft, freshly baked bun. Every ingredient is freshly prepared and cooked to order for maximum flavor in every bite.\n\nServed with a hot portion of crispy fries and your choice of refreshing soft drink to complete the combo.\n\n🔥 Bonus: This meal deal also includes a FREE ATM Leather Jailbirds Wallet – tough, stylish, and built to last.\n\nFresh buns. Fresh ingredients. Freshly cooked.\nThe Jail Yard Tower isn’t just a meal… it’s a full yard experience.',
     deliveryCharge: 0,
     deliveryTime: '35-45 min',
-    freeGift: 'Mystery Item',
-    image: 'https://picsum.photos/seed/meal1/600/600'
+    freeGift: 'FREE ATM Leather Jailbirds Wallet',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20burger%20mean%20wallets.png'
+  },
+  {
+    id: 'm3',
+    name: 'Warden’s Parole Meal',
+    category: 'Meal Deals',
+    price: 48000,
+    shortDescription: 'The Warden’s Parole Meal is built to keep your energy levels on high alert, packed with protein and stacked for serious satisfaction.',
+    fullDescription: 'Includes:\n- Medium: Warden’s Parole Burger + 250ml Drink + Medium Fries\n- Large: Warden’s Parole Burger + 390ml Drink + Large Fries\n\nThe Warden’s Parole Meal is built to keep your energy levels on high alert, packed with protein and stacked for serious satisfaction. This burger starts with a freshly pan-fried bun, layered with Jailbirds special sauce, then loaded with golden fries, rich sauced beans, a juicy sausage, and topped with a perfectly fried egg and fried onion. Served with crispy fries, a cold drink of your choice, and a free ATM leather wallet.',
+    deliveryCharge: 0,
+    deliveryTime: '35-45 min',
+    freeGift: 'FREE ATM Leather Jailbirds Wallet',
+    image: 'https://ik.imagekit.io/7grri5v7d/wardens%20meal%20dealss.png'
+  },
+  {
+    id: 'm4',
+    name: 'Warden’s Day Break',
+    category: 'Meal Deals',
+    price: 44000,
+    shortDescription: 'The Warden’s Day Break is a powerful meal designed to keep your energy high and your hunger locked down, packed with mouth watering flavours in every bite.',
+    fullDescription: 'Includes:\n- Medium: Warden’s Day Break Burger + 250ml Drink + Medium Fries\n- Large: Warden’s Day Break Burger + 390ml Drink + Large Fries\n\nThe Warden’s Day Break is a powerful meal designed to keep your energy high and your hunger locked down, packed with mouth watering flavours in every bite. Built inside a freshly pan-fried bun, it’s layered with Jailbirds special sauce, stacked with golden fries, then creamy coleslaw with rich mayo sauce, followed by a juicy sausage and finished with a perfectly fried egg and fried onions. Served with a side of hot fries, a cold drink of your choice, and a free ATM leather wallet.',
+    deliveryCharge: 0,
+    deliveryTime: '35-45 min',
+    freeGift: 'FREE ATM Leather Jailbirds Wallet',
+    image: 'https://ik.imagekit.io/7grri5v7d/wardens%20meal%20dealssx.png'
+  },
+  {
+    id: 'm5',
+    name: 'Tower Max',
+    category: 'Meal Deals',
+    price: 43000,
+    shortDescription: 'The Tower Max stacks high for serious flavour and is built to crush any appetite.',
+    fullDescription: 'Includes:\n- Medium: Tower Max Burger + 250ml Drink + Medium Fries\n- Large: Tower Max Burger + 390ml Drink + Large Fries\n\nThe Tower Max stacks high for serious flavour and is built to crush any appetite. Layered with Jailbirds’ special sauce, golden fries, creamy coleslaw, a juicy chicken burger, a freshly fried egg, and sliced onions, all sealed inside a fresh soft bun.\n\nThis loaded tower meal is served with crispy fries and a cold drink of your choice — the ultimate feed when hunger hits hard.',
+    deliveryCharge: 0,
+    deliveryTime: '35-45 min',
+    freeGift: 'FREE ATM Leather Jailbirds Wallet',
+    image: 'https://ik.imagekit.io/7grri5v7d/ssssssssddd.png'
+  },
+  {
+    id: 'm6',
+    name: 'Chicken Max',
+    category: 'Meal Deals',
+    price: 47000,
+    shortDescription: 'Stacked high and built for serious appetite, the Chicken Max is loaded with bold Jailbirds flavour from top to bottom.',
+    fullDescription: 'Includes:\n- Medium: Chicken Max Burger + 250ml Drink + Medium Fries\n- Large: Chicken Max Burger + 390ml Drink + Large Fries\n\nStacked high and built for serious appetite, the Chicken Max is loaded with bold Jailbirds flavour from top to bottom. It starts with a fresh soft bun, layered with Jailbirds special sauce, followed by crispy golden fries and rich sauced beans. On top sits a juicy chicken burger, melted cheese, a perfectly fried egg, and fresh sliced onion, all sealed with a toasted bun.\n\nServed as a full meal with crispy French fries and a cold drink of your choice — this one delivers big taste in every bite.',
+    deliveryCharge: 0,
+    deliveryTime: '35-45 min',
+    freeGift: 'FREE ATM Leather Jailbirds Wallet',
+    image: 'https://ik.imagekit.io/7grri5v7d/ssssssssdddxxxx.png'
   },
   {
     id: 'h1',
