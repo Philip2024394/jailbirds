@@ -30,6 +30,23 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const ChiliPepperIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+    {...props}
+  >
+    <path
+      d="M14.2 3.2c.2 1.9-.8 3.7-2.5 4.6-4.2 2.2-6.5 5.4-6.5 9 0 2.9 2.4 5.2 5.3 5.2 5.8 0 10-4.2 10-10 0-3.4-2-6.7-6.3-8.8z"
+      fill="currentColor"
+    />
+    <path d="M14.4 3.3c.7-.7 1.6-1.2 2.6-1.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
 const DELIVERY_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/scooter%20jailbirds.png';
 const ETA_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/cooking_s-removebg-preview.png';
 
@@ -38,6 +55,323 @@ type DeliveryZoneId = 'A' | 'B' | 'C';
 const STORE_LOCATION = {
   lat: -7.8238,
   lng: 110.4185,
+};
+
+const GiftFriendPage = ({ onSelectCategory }: { onSelectCategory: (c: Category) => void }) => {
+  const [footerMsgIndex, setFooterMsgIndex] = useState(0);
+  const [heliPhase, setHeliPhase] = useState<'enter' | 'hover' | 'exit'>('enter');
+  const [pendingCategory, setPendingCategory] = useState<Category | null>(null);
+  const [selectedGiftCardId, setSelectedGiftCardId] = useState<string | null>(null);
+  const [giftCardPreviewIndex, setGiftCardPreviewIndex] = useState(0);
+  const [isGiftCardSliderOpen, setIsGiftCardSliderOpen] = useState(false);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setFooterMsgIndex(i => (i + 1) % GIFT_FRIEND_PREVIEW_MESSAGES.length);
+    }, 2200);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setGiftCardPreviewIndex(i => (i + 1) % GIFT_CARD_OPTIONS.length);
+    }, 2000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (heliPhase !== 'exit' || !pendingCategory) return;
+    const timeout = window.setTimeout(() => {
+      onSelectCategory(pendingCategory);
+      setPendingCategory(null);
+      setHeliPhase('enter');
+    }, 5200);
+    return () => window.clearTimeout(timeout);
+  }, [heliPhase, pendingCategory, onSelectCategory]);
+
+  return (
+    <div
+      className="min-h-screen w-full bg-cover bg-center"
+      style={{ backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/friend%20order.png')" }}
+    >
+      <div className="min-h-screen w-full bg-gradient-to-b from-prison-black/10 via-prison-black/35 to-prison-black/85 relative overflow-hidden">
+        <AnimatePresence>
+          {isGiftCardSliderOpen && (
+            <motion.div
+              className="fixed inset-0 z-[80]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <button
+                type="button"
+                aria-label="Close gift cards"
+                onClick={() => setIsGiftCardSliderOpen(false)}
+                className="absolute inset-0 bg-black/70"
+              />
+              <motion.div
+                className="absolute left-0 right-0 bottom-0 bg-prison-black border-t border-white/10 rounded-t-3xl overflow-hidden"
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 40, opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                <div className="px-4 md:px-6 pt-4 pb-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-white font-black uppercase tracking-tighter text-lg md:text-2xl">Choose a Card</div>
+                    <div className="text-white/70 font-bold text-xs md:text-sm">Tap a card to select</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsGiftCardSliderOpen(false)}
+                    className="shrink-0 rounded-2xl border border-white/10 bg-white/5 hover:border-prison-orange/40 text-white px-3 py-2 font-black uppercase tracking-tight text-xs"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="px-4 md:px-6 pb-6">
+                  <div className="max-h-[70vh] overflow-y-auto pr-1">
+                    {GIFT_CARD_OPTIONS.map((card) => {
+                      const selected = selectedGiftCardId === card.id;
+                      return (
+                        <button
+                          key={card.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedGiftCardId(card.id);
+                            setIsGiftCardSliderOpen(false);
+                          }}
+                          className={cn(
+                            'w-full rounded-3xl border p-4 transition-colors',
+                            selected
+                              ? 'border-prison-orange bg-prison-orange/10'
+                              : 'border-white/10 bg-white/5 hover:border-prison-orange/40'
+                          )}
+                        >
+                          <div className="w-full aspect-[4/3] rounded-2xl bg-black/20 border border-white/10 overflow-hidden flex items-center justify-center">
+                            <img
+                              src={card.imageUrl}
+                              alt={card.title}
+                              className="w-full h-full object-contain"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                          <div className="mt-3">
+                            <div className="text-white font-black uppercase tracking-tight text-sm md:text-base">{card.title}</div>
+                            <div className="text-white/70 font-bold text-[11px] md:text-sm leading-snug">{card.subtitle}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.div
+          initial={{ x: '120vw', opacity: 1 }}
+          animate={
+            heliPhase === 'enter'
+              ? { x: ['120vw', '0vw'], y: [0, 10, -6, 0], opacity: 1 }
+              : heliPhase === 'hover'
+                ? { x: '0vw', y: [0, -6, 2, -4, 0], opacity: 1 }
+                : { x: ['0vw', '-130vw'], y: [0, 8, 14], opacity: 1 }
+          }
+          transition={
+            heliPhase === 'hover'
+              ? { duration: 4.8, repeat: Infinity, ease: 'easeInOut' }
+              : { duration: 5.2, ease: 'easeInOut' }
+          }
+          onAnimationComplete={() => {
+            if (heliPhase === 'enter') {
+              setHeliPhase('hover');
+              return;
+            }
+          }}
+          className="absolute left-1/2 top-24 md:top-28 -translate-x-1/2 z-20 pointer-events-none"
+        >
+          <div className="relative w-[260px] md:w-[420px]">
+            <img
+              src="https://ik.imagekit.io/7grri5v7d/Jailbirds%20prison%20helicopter%20philip.png"
+              alt="Jailbirds helicopter"
+              className="w-full h-auto drop-shadow-[0_25px_40px_rgba(0,0,0,0.65)]"
+              referrerPolicy="no-referrer"
+            />
+
+            {/* Soft circular spinning shadow above rotor (subtle, cinematic) */}
+            <motion.div
+              aria-hidden
+              className="absolute left-[47%] top-[13%] w-[58%] h-[34%] rounded-full z-[1]"
+              style={{
+                background:
+                  'conic-gradient(from 90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.14), rgba(0,0,0,0.0))',
+                filter: 'blur(10px)',
+                mixBlendMode: 'multiply',
+                opacity: 0.22,
+              }}
+              transformTemplate={({ rotate }) => `translate(-50%, -50%) rotate(${rotate}deg)`}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 5.2, repeat: Infinity, ease: 'linear' }}
+            />
+
+            {/* Main rotor: high-speed blur disc (top-down) */}
+            <motion.div
+              aria-hidden
+              className="absolute left-[47%] top-[13%] w-[50%] h-[30%] rounded-full z-10"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, rgba(255,255,255,0.0), rgba(255,255,255,0.22), rgba(255,255,255,0.0))',
+                filter: 'blur(0.8px) saturate(1.0)',
+                mixBlendMode: 'screen',
+                opacity: 0.84,
+                transformStyle: 'preserve-3d',
+              }}
+              transformTemplate={({ rotate }) => `translate(-50%, -50%) perspective(900px) rotateX(-86deg) rotateZ(${rotate}deg)`}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.16, repeat: Infinity, ease: 'linear' }}
+            />
+
+            {/* Soft circular spinning shadow below rotor (sweep across top body) */}
+            <motion.div
+              aria-hidden
+              className="absolute left-[47%] top-[18%] w-[66%] h-[40%] rounded-full z-[2]"
+              style={{
+                background:
+                  'conic-gradient(from 270deg, rgba(0,0,0,0.0), rgba(0,0,0,0.12), rgba(0,0,0,0.0))',
+                filter: 'blur(12px)',
+                mixBlendMode: 'multiply',
+                opacity: 0.18,
+              }}
+              transformTemplate={({ rotate }) => `translate(-50%, -50%) rotate(${rotate}deg)`}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 5.2, repeat: Infinity, ease: 'linear' }}
+            />
+
+            {/* Rotor mast vibration (very subtle, loopable) */}
+            <div
+              className="absolute left-1/2 top-[18%] w-[300px] h-[3px] rounded-full z-20"
+              style={{
+                transform: `translate(-50%, -50%) translate(${HELI_ROTOR_LINE_X_OFFSET_PX}px, ${HELI_ROTOR_LINE_Y_OFFSET_PX}px)`,
+              }}
+            >
+              <motion.div
+                aria-hidden
+                className="w-full h-full rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,1)',
+                  filter: 'blur(0.25px)',
+                  mixBlendMode: 'screen',
+                }}
+                animate={{ opacity: [0.08, 0.24, 0.12, 0.22, 0.08] }}
+                transition={{ duration: 0.22, repeat: Infinity, ease: 'linear' }}
+              />
+            </div>
+
+            <div
+              aria-hidden
+              className="absolute left-[90%] top-[31%] w-[56px] h-[56px] z-[10]"
+              style={{ mixBlendMode: 'screen', transform: 'translate(-50%, -50%) translate(20px, -4px)' }}
+            >
+              <motion.div
+                className="absolute left-1/2 top-1/2 w-[50px] h-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,1), rgba(255,255,255,0.0))',
+                  filter: 'blur(0.35px)',
+                  opacity: 0.95,
+                  transformOrigin: '50% 50%',
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+              />
+              <div
+                className="absolute left-1/2 top-1/2 w-[5px] h-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.9)', filter: 'blur(0.2px)', opacity: 0.85 }}
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="pt-20 md:pt-24 pb-10 min-h-screen max-w-7xl mx-auto px-4 flex flex-col relative z-30">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter drop-shadow-2xl">
+              GIFT A <span className="text-prison-orange">FRIEND</span>
+            </h1>
+          </div>
+
+          <div className="flex-grow" />
+
+          <div className="flex items-center justify-center pb-10 md:pb-14 mt-[150px]">
+            <div className="w-full max-w-4xl">
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    disabled={heliPhase === 'exit'}
+                    onClick={() => {
+                      if (heliPhase === 'exit') return;
+                      setPendingCategory(cat);
+                      setHeliPhase('exit');
+                    }}
+                    className={cn(
+                      "aspect-square bg-white/5 border border-white/10 rounded-2xl transition-colors flex items-center justify-center backdrop-blur-md",
+                      heliPhase === 'exit' ? 'opacity-60 cursor-not-allowed' : 'hover:border-prison-orange/40'
+                    )}
+                  >
+                    <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/80 text-center px-2 leading-tight">
+                      {cat}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center mt-10 pb-6">
+            <div className="w-full max-w-4xl">
+              <button
+                type="button"
+                onClick={() => setIsGiftCardSliderOpen(true)}
+                className="w-full bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md p-4 md:p-6 hover:border-prison-orange/40 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-[78px] h-[78px] md:w-[92px] md:h-[92px] rounded-2xl bg-black/20 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src={(GIFT_CARD_OPTIONS[selectedGiftCardId ? GIFT_CARD_OPTIONS.findIndex((c) => c.id === selectedGiftCardId) : giftCardPreviewIndex] ?? GIFT_CARD_OPTIONS[giftCardPreviewIndex]).imageUrl}
+                        alt="Gift card preview"
+                        className="w-full h-full object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <div className="text-white font-black uppercase tracking-tighter text-lg md:text-2xl">
+                        {selectedGiftCardId
+                          ? 'Selected Card'
+                          : 'Gift Card'}
+                      </div>
+                      <div className="text-white/70 font-bold text-xs md:text-sm">
+                        {selectedGiftCardId
+                          ? (GIFT_CARD_OPTIONS.find((c) => c.id === selectedGiftCardId)?.title ?? 'Selected')
+                          : (GIFT_CARD_OPTIONS[giftCardPreviewIndex]?.title ?? 'Choose a card')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right text-white/80 font-black uppercase tracking-tighter text-xs md:text-sm whitespace-nowrap">
+                    Tap to choose
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const DELIVERY_ZONES: Array<{
@@ -64,6 +398,9 @@ const EXTRA_PRICES: Record<string, number> = {
   'Extra Cheese': 5000,
   'Extra Sauce': 4000,
   'Bacon': 8000,
+  'Onion Rings': 13000,
+  'French Fries': 16000,
+  'Coleslaw': 9000,
   'Onion': 3000,
   'Cheese': 2200,
   'Tamatoe': 3000,
@@ -79,7 +416,92 @@ const EXTRA_PRICES: Record<string, number> = {
   'White Capucino': 17000,
 };
 
+const extraPriceFor = (itemId: string, extraKey: string) => {
+  if (itemId === 'c3' && extraKey === 'Sausage') return 8000;
+  return EXTRA_PRICES[extraKey] ?? 0;
+};
+
+const FIRE_BITES_PIECE_TIERS = [4, 6, 9, 12] as const;
+const fireBitesBasePriceForPieces = (pieces: number) => {
+  if (pieces <= 4) return 23000;
+  if (pieces <= 6) return 28000;
+  if (pieces <= 9) return 34000;
+  return 45000;
+};
+
+const stepFireBitesPieces = (current: number, direction: -1 | 1) => {
+  const normalized = (() => {
+    const nearest = FIRE_BITES_PIECE_TIERS.reduce((best, t) => {
+      return Math.abs(t - current) < Math.abs(best - current) ? t : best;
+    }, FIRE_BITES_PIECE_TIERS[0]);
+    return nearest;
+  })();
+
+  const idx = FIRE_BITES_PIECE_TIERS.indexOf(normalized);
+  const nextIdx = idx + direction;
+  if (nextIdx < 0) return 0;
+  if (nextIdx >= FIRE_BITES_PIECE_TIERS.length) return FIRE_BITES_PIECE_TIERS[FIRE_BITES_PIECE_TIERS.length - 1];
+  return FIRE_BITES_PIECE_TIERS[nextIdx];
+};
+
 const SAUCE_FLAVORS: SauceFlavor[] = ['Chilli', 'BBQ', 'Cheese', 'Tamatoe', 'Mayonaise'];
+
+const GIFT_FRIEND_PREVIEW_MESSAGES = [
+  'Happy Birthday',
+  'Congrulations',
+  'Miss You',
+  'Love You',
+  'Safe Journey',
+  'Get Well Soon',
+];
+
+const GIFT_CARD_OPTIONS: Array<{ id: string; imageUrl: string; title: string; subtitle: string }> = [
+  {
+    id: 'card_7',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/7.png',
+    title: 'Thank You',
+    subtitle: 'A simple note to brighten their meal',
+  },
+  {
+    id: 'card_6',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/6-removebg-preview.png',
+    title: 'Happy Birthday',
+    subtitle: 'Send birthday vibes with their gift bag',
+  },
+  {
+    id: 'card_5',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/5.png',
+    title: 'Congratulations',
+    subtitle: 'Celebrate the win with food + a card',
+  },
+  {
+    id: 'card_4',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/4.png',
+    title: 'Love You',
+    subtitle: 'A small card with a big message',
+  },
+  {
+    id: 'card_3',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/3.png',
+    title: 'Miss You',
+    subtitle: 'Let them know you’re thinking of them',
+  },
+  {
+    id: 'card_2',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/2-removebg-preview.png',
+    title: 'Safe Journey',
+    subtitle: 'Wish them a smooth trip ahead',
+  },
+  {
+    id: 'card_1',
+    imageUrl: 'https://ik.imagekit.io/7grri5v7d/1-removebg-preview%20(1).png',
+    title: 'Get Well Soon',
+    subtitle: 'A warm note for a quick recovery',
+  },
+];
+
+const HELI_ROTOR_LINE_X_OFFSET_PX = -65;
+const HELI_ROTOR_LINE_Y_OFFSET_PX = 10;
 
 const SMALL_DRINK_PRICE = 8000;
 
@@ -93,6 +515,12 @@ const mealSizesForItem = (item: FoodItem) => {
     return [
       { id: 'Medium' as const, label: 'Medium (Rp 45,000)', price: 45_000, includes: 'Tower Burger + 250ml Drink + Medium Fries' },
       { id: 'Large' as const, label: 'Large (Rp 53,000)', price: 53_000, includes: 'Tower Burger + 390ml Drink + Large Fries' },
+    ];
+  }
+  if (item.id === 'm7') {
+    return [
+      { id: 'Medium' as const, label: 'Medium (Rp 44,000)', price: 44_000, includes: 'Cell Block Fire Bites + 250ml Drink + Medium Fries' },
+      { id: 'Large' as const, label: 'Large (Rp 53,000)', price: 53_000, includes: 'Cell Block Fire Bites + 390ml Drink + Large Fries' },
     ];
   }
   if (item.id === 'm3') {
@@ -150,7 +578,7 @@ const inferredZoneFromDistance = (distanceKm: number): DeliveryZoneId | null => 
 
 const cartLineItemSubtotal = (item: CartLineItem) => {
   const extrasTotal = (Object.entries(item.customization.extras) as [string, number][])?.reduce(
-    (acc, [k, v]) => acc + (EXTRA_PRICES[k] ?? 0) * (v ?? 0),
+    (acc, [k, v]) => acc + extraPriceFor(item.id, k) * (v ?? 0),
     0
   );
   const drinkTotal = item.customization.smallDrink ? SMALL_DRINK_PRICE : 0;
@@ -162,6 +590,11 @@ const cartLineItemSubtotal = (item: CartLineItem) => {
     return Math.max(0, price - item.price);
   })();
 
+  if (item.id === 'c4') {
+    const base = fireBitesBasePriceForPieces(item.quantity);
+    return base + extrasTotal + drinkTotal;
+  }
+
   const perUnit = item.price + extrasTotal + drinkTotal + mealSizeTotal;
   return perUnit * item.quantity;
 };
@@ -172,6 +605,7 @@ const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string 
   "Sandwich's": UtensilsCrossed,
   'HotDogs': UtensilsCrossed,
   'Kebabs': LayoutGrid,
+  'Crispy Chicken': UtensilsCrossed,
   'Drinks': Coffee,
   'Trays': LayoutGrid
 };
@@ -285,7 +719,7 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
       >
       {/* Image Container with Padding */}
       <div className="p-3 pb-0">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-xl shadow-inner bg-prison-black">
+        <div className="relative h-40 md:h-48 overflow-hidden rounded-xl shadow-inner bg-prison-black">
           <img 
             src={item.image} 
             alt={item.name}
@@ -302,9 +736,22 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
           </div>
 
           <div className="absolute top-2 left-2 flex items-center gap-2">
-            <span className="bg-prison-orange text-black px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest brutal-border border-black shadow-lg">
-              {item.category}
-            </span>
+            {(item.id === 'c4' || item.id === 'm7') ? (
+              <div className="flex items-center gap-1.5 bg-prison-black/70 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1 shadow-lg">
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <ChiliPepperIcon key={i} className="w-3 h-3 text-red-500" />
+                  ))}
+                </div>
+                <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[9px] font-black brutal-border border-black">
+                  18+
+                </div>
+              </div>
+            ) : (
+              <span className="bg-prison-orange text-black px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest brutal-border border-black shadow-lg">
+                {item.category}
+              </span>
+            )}
             {item.spicyLevel && (
               <div className="flex gap-0.5 bg-prison-black/70 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1 shadow-lg">
                 {[...Array(item.spicyLevel)].map((_, i) => (
@@ -331,7 +778,7 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
           </h3>
         </div>
         
-        <p className="text-white/55 text-[10px] md:text-xs line-clamp-3 mb-3 font-medium italic">
+        <p className="text-white/55 text-[10px] md:text-xs leading-snug line-clamp-3 min-h-[3.6em] md:min-h-[3.9em] mb-3 font-medium italic">
           {item.shortDescription}
         </p>
 
@@ -376,11 +823,12 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
   );
 };
 
-const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: { 
+const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: { 
   item: FoodItem | null, 
   onClose: () => void,
   onAddToCart: (item: FoodItem, customization: CartCustomization, quantity: number) => void,
-  selectedZone: DeliveryZoneId | null
+  selectedZone: DeliveryZoneId | null;
+  onGiftFriend?: () => void;
 }) => {
   if (!item) return null;
 
@@ -390,6 +838,11 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
   const showSmallDrinkAddOn = !isMealDeal && item.category !== 'Drinks';
 
   const EXTRA_OPTIONS = useMemo(() => {
+    if (item.id === 'c1' || item.id === 'c2') return ['Extra Sauce'];
+    if (item.id === 'c3') return ['Onion Rings', 'Sausage'];
+    if (item.id === 'c4') return ['French Fries', 'Coleslaw'];
+    if (item.id === 'm7') return ['Extra Sauce'];
+    if (item.id === 'b5') return ['Cheese', 'Tamatoe', 'Onion', 'Sauce'];
     if (item.id === 'm2') return ['Onion', 'Cheese', 'Tamatoe'];
     if (item.id === 'm3') return ['Sausage', 'Fried Egg', 'Onion (Parole)', 'Tamatoe Fried', 'Extra Sauce'];
     if (item.id === 'm5') return ['Fried Egg', 'Fried Tamatoe', 'Sauce'];
@@ -403,6 +856,10 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
   }, [item.id]);
 
   const REMOVAL_OPTIONS = useMemo(() => {
+    if (item.id === 'c1' || item.id === 'c2' || item.id === 'c3') return [];
+    if (item.id === 'c4') return ['Remove Lava Sauce'];
+    if (item.id === 'm7') return ['Remove Lava Sauce'];
+    if (item.id === 'b5') return ['Fries', 'Jailbirds Sauce', 'Fried Egg', 'Fried Onion'];
     if (item.id === 'm2') return ['Cheese', 'Onion', 'Tamatoes', 'Lettuce', 'Sauce'];
     if (item.id === 'm3') return ['Fried Egg', 'Sauced Beans', 'Fries', 'Jailbirds Sauce'];
     if (item.id === 'm5') return ['Fried Egg', 'Fried Onion', 'Fries', 'Jailbirds Sauce'];
@@ -430,6 +887,13 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
   const [mealDrink, setMealDrink] = useState<SmallDrinkOption | null>(null);
   const [extraSauceFlavor, setExtraSauceFlavor] = useState<SauceFlavor | ''>('');
   const [quantity, setQuantity] = useState(1);
+  const [giftPreviewIndex, setGiftPreviewIndex] = useState(0);
+  const [isFriesInfoOpen, setIsFriesInfoOpen] = useState(false);
+
+  const hasFries = useMemo(() => {
+    const haystack = `${item.shortDescription ?? ''}\n${item.fullDescription ?? ''}`.toLowerCase();
+    return haystack.includes('fries') || haystack.includes('french fries');
+  }, [item.fullDescription, item.shortDescription]);
 
   useEffect(() => {
     setExtrasSelected(
@@ -448,6 +912,13 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
     setExtraSauceFlavor('');
     setQuantity(1);
   }, [EXTRA_OPTIONS, REMOVAL_OPTIONS, item.id]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setGiftPreviewIndex(i => (i + 1) % GIFT_FRIEND_PREVIEW_MESSAGES.length);
+    }, 2200);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!isMealDeal) return;
@@ -470,7 +941,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
   }, [removals]);
 
   const extrasTotal = useMemo(() => {
-    return selectedExtras.reduce((acc, k) => acc + (EXTRA_PRICES[k] ?? 0), 0);
+    return selectedExtras.reduce((acc, k) => acc + extraPriceFor(item.id, k), 0);
   }, [selectedExtras]);
 
   const drinkTotal = useMemo(() => {
@@ -484,8 +955,11 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
   }, [isMealDeal, item.price, mealSize]);
 
   const lineTotal = useMemo(() => {
+    if (item.id === 'c4') {
+      return fireBitesBasePriceForPieces(quantity) + extrasTotal + drinkTotal;
+    }
     return (item.price + mealSizeTotal + extrasTotal + drinkTotal) * quantity;
-  }, [drinkTotal, extrasTotal, item.price, mealSizeTotal, quantity]);
+  }, [drinkTotal, extrasTotal, item.id, item.price, mealSizeTotal, quantity]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
@@ -496,6 +970,64 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
+
+      <AnimatePresence>
+        {isFriesInfoOpen && (
+          <motion.div
+            className="absolute inset-0 z-[120] flex items-center justify-center px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute inset-0 bg-black/70"
+              onClick={() => setIsFriesInfoOpen(false)}
+            />
+            <motion.div
+              className="relative w-full max-w-md bg-prison-black border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+              initial={{ y: 16, opacity: 0, scale: 0.98 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 16, opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-white font-black uppercase tracking-tighter text-lg">Did You Know ?</div>
+                    <div className="text-white/60 font-bold text-xs italic">Fries container info</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsFriesInfoOpen(false)}
+                    className="shrink-0 p-2 rounded-2xl bg-white/5 border border-white/10 hover:border-prison-orange/40"
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                  <div className="aspect-[4/3] bg-black/30">
+                    <img
+                      src="https://ik.imagekit.io/7grri5v7d/french%20fries%20containers.png"
+                      alt="Jailbirds fries container"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                </div>
+
+                <p className="mt-4 text-white/75 text-sm leading-relaxed italic">
+                  Jailbirds French fries containers are made from special food-grade material that’s waterproof and holds its shape — so after you’ve finished your fries, you can reuse it to store small personal belongings.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
@@ -524,9 +1056,22 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
             <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-prison-orange text-black px-2 py-0.5 text-[10px] font-black uppercase rounded-sm brutal-border border-black shadow-lg">
-                    {item.category}
-                  </span>
+                  {(item.id === 'c4' || item.id === 'm7') ? (
+                    <div className="flex items-center gap-1.5 bg-prison-black/70 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1 shadow-lg">
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <ChiliPepperIcon key={i} className="w-3 h-3 text-red-500" />
+                        ))}
+                      </div>
+                      <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[9px] font-black brutal-border border-black">
+                        18+
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="bg-prison-orange text-black px-2 py-0.5 text-[10px] font-black uppercase rounded-sm brutal-border border-black shadow-lg">
+                      {item.category}
+                    </span>
+                  )}
                   {item.spicyLevel && (
                     <div className="flex gap-0.5">
                       {[...Array(item.spicyLevel)].map((_, i) => (
@@ -540,7 +1085,9 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
                 </h2>
               </div>
               <div className="flex-shrink-0 bg-prison-black/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 shadow-lg">
-                <p className="text-prison-orange text-lg md:text-2xl font-black">Rp {item.price.toLocaleString()}</p>
+                <p className="text-prison-orange text-lg md:text-2xl font-black">
+                  Rp {(item.id === 'c4' ? fireBitesBasePriceForPieces(quantity) : item.price).toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
@@ -550,6 +1097,17 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
               <p className="text-white/75 leading-relaxed italic text-sm md:text-base">
                 {item.fullDescription}
               </p>
+
+              {hasFries && (
+                <button
+                  type="button"
+                  onClick={() => setIsFriesInfoOpen(true)}
+                  className="mt-3 text-left text-prison-orange font-black uppercase tracking-widest text-[10px] hover:underline"
+                >
+                  Did You Know ?
+                </button>
+              )}
+
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="bg-white/5 p-3 rounded-xl border border-white/10">
                   <div className="flex items-center gap-2 mb-1">
@@ -597,7 +1155,10 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
                 <div className="flex items-center gap-3 bg-white/5 rounded-xl p-1 border border-white/10">
                   <button
                     type="button"
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    onClick={() => setQuantity(q => {
+                      if (item.id === 'c4') return stepFireBitesPieces(q, -1) || 4;
+                      return Math.max(1, q - 1);
+                    })}
                     className="p-2 hover:bg-white/10 rounded-lg"
                     aria-label="Decrease quantity"
                   >
@@ -606,7 +1167,10 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
                   <span className="font-black w-6 text-center">{quantity}</span>
                   <button
                     type="button"
-                    onClick={() => setQuantity(q => Math.min(10, q + 1))}
+                    onClick={() => setQuantity(q => {
+                      if (item.id === 'c4') return stepFireBitesPieces(q, 1);
+                      return Math.min(10, q + 1);
+                    })}
                     className="p-2 hover:bg-white/10 rounded-lg"
                     aria-label="Increase quantity"
                   >
@@ -717,7 +1281,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
                         "text-xs font-black uppercase tracking-widest",
                         checked ? "text-prison-orange" : "text-white/40"
                       )}>
-                        +Rp {(EXTRA_PRICES[opt] ?? 0).toLocaleString()}
+                        +Rp {extraPriceFor(item.id, opt).toLocaleString()}
                       </span>
                       <input
                         type="checkbox"
@@ -747,48 +1311,50 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
               )}
             </div>
 
-            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-md p-4 md:p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-              <div className="mb-3">
-                <p className="text-[10px] text-red-200 uppercase font-black tracking-widest">Remove Items</p>
-                <p className="text-xs text-red-100/70 font-bold italic">We’ll leave it out</p>
+            {REMOVAL_OPTIONS.length > 0 && (
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-md p-4 md:p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                <div className="mb-3">
+                  <p className="text-[10px] text-red-200 uppercase font-black tracking-widest">Remove Items</p>
+                  <p className="text-xs text-red-100/70 font-bold italic">We’ll leave it out</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {REMOVAL_OPTIONS.map((opt) => {
+                    const checked = !!removals[opt];
+                    return (
+                      <label
+                        key={opt}
+                        className={cn(
+                          "flex items-center justify-between gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors",
+                          checked
+                            ? "bg-red-500/30 border-red-400/50"
+                            : "bg-white/5 border-red-500/20 hover:border-red-400/60"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className={cn(
+                              "w-5 h-5 rounded-md border flex items-center justify-center",
+                              checked
+                                ? "bg-red-500 border-black"
+                                : "bg-transparent border-red-200/40"
+                            )}
+                          >
+                            {checked && <Check className="w-3.5 h-3.5 text-black" />}
+                          </span>
+                          <span className="font-black text-sm uppercase tracking-tight truncate">{opt}</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => setRemovals(prev => ({ ...prev, [opt]: !prev[opt] }))}
+                          className="sr-only"
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-1 gap-2">
-                {REMOVAL_OPTIONS.map((opt) => {
-                  const checked = !!removals[opt];
-                  return (
-                    <label
-                      key={opt}
-                      className={cn(
-                        "flex items-center justify-between gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors",
-                        checked
-                          ? "bg-red-500/30 border-red-400/50"
-                          : "bg-white/5 border-red-500/20 hover:border-red-400/60"
-                      )}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span
-                          className={cn(
-                            "w-5 h-5 rounded-md border flex items-center justify-center",
-                            checked
-                              ? "bg-red-500 border-black"
-                              : "bg-transparent border-red-200/40"
-                          )}
-                        >
-                          {checked && <Check className="w-3.5 h-3.5 text-black" />}
-                        </span>
-                        <span className="font-black text-sm uppercase tracking-tight truncate">{opt}</span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => setRemovals(prev => ({ ...prev, [opt]: !prev[opt] }))}
-                        className="sr-only"
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            )}
 
             {showSmallDrinkAddOn && (
               <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
@@ -822,6 +1388,27 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
                 </div>
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                (onGiftFriend ?? (() => {}))();
+              }}
+              className="w-full bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md hover:border-prison-orange/40 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl brutal-border border-black bg-prison-orange text-black flex items-center justify-center font-black uppercase tracking-tight text-xs">
+                  Gift
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Gift a Friend</p>
+                  <p className="text-white font-black uppercase tracking-tighter text-sm truncate">
+                    {GIFT_FRIEND_PREVIEW_MESSAGES[giftPreviewIndex]}
+                  </p>
+                </div>
+              </div>
+            </button>
           </div>
 
           <div className="sticky bottom-0 left-0 right-0 mt-6 pb-4">
@@ -887,8 +1474,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
 
 // --- Pages ---
 
-const HomePage = ({ onSelectItem, selectedZone }: { onSelectItem: (item: FoodItem) => void; selectedZone: DeliveryZoneId | null }) => {
-  const [activeCategory, setActiveCategory] = useState<Category>('Burgers');
+const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategory }: { onSelectItem: (item: FoodItem) => void; selectedZone: DeliveryZoneId | null; activeCategory: Category; setActiveCategory: (c: Category) => void }) => {
 
   const filteredItems = useMemo(() => {
     return MENU_ITEMS.filter(item => item.category === activeCategory);
@@ -1444,6 +2030,7 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
   const [cart, setCart] = useState<CartLineItem[]>([]);
   const [selectedDeliveryZone, setSelectedDeliveryZone] = useState<DeliveryZoneId | null>(null);
+  const [activeCategory, setActiveCategory] = useState<Category>('Burgers');
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -1481,7 +2068,9 @@ export default function App() {
     setCart(prev => {
       return prev.map(item => {
         if (item.lineId === lineId) {
-          const newQty = Math.max(0, item.quantity + delta);
+          const newQty = item.id === 'c4'
+            ? stepFireBitesPieces(item.quantity, delta < 0 ? -1 : 1)
+            : Math.max(0, item.quantity + delta);
           return { ...item, quantity: newQty };
         }
         return item;
@@ -1557,7 +2146,23 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <HomePage onSelectItem={setSelectedItem} selectedZone={selectedDeliveryZone} />
+              <HomePage onSelectItem={setSelectedItem} selectedZone={selectedDeliveryZone} activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+            </motion.div>
+          )}
+          {activePage === 'gift' && (
+            <motion.div
+              key="gift"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <GiftFriendPage
+                onSelectCategory={(cat) => {
+                  setActiveCategory(cat);
+                  setActivePage('home');
+                  window.setTimeout(() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' }), 50);
+                }}
+              />
             </motion.div>
           )}
           {activePage === 'warden' && (
@@ -1606,6 +2211,7 @@ export default function App() {
             onClose={() => setSelectedItem(null)} 
             onAddToCart={addToCart}
             selectedZone={selectedDeliveryZone}
+            onGiftFriend={() => setActivePage('gift')}
           />
         )}
       </AnimatePresence>

@@ -6,11 +6,64 @@ export const CATEGORIES: Category[] = [
   "Sandwich's",
   'HotDogs',
   'Kebabs',
+  'Crispy Chicken',
   'Drinks',
   'Trays'
 ];
 
 export const MENU_ITEMS: FoodItem[] = [
+  {
+    id: 'c1',
+    name: 'Warden’s Crunch',
+    category: 'Crispy Chicken',
+    price: 12000,
+    shortDescription: 'Locked in with our Jailbirds secret recipe. Full-size wings seasoned deep to the bone, lightly coated for a thin golden crunch — tender, juicy, and seriously addictive.',
+    fullDescription:
+      'Locked in with our special Jailbirds secret recipe, these full-size chicken wings are seasoned deep to the bone and sealed with our signature blend of premium herbs and spices. Each wing is lightly coated for that perfect golden crisp — thin, crunchy, and irresistibly mouth-watering — while the inside stays tender, juicy, and cooked to perfection.\n\nOur unique Jailbirds-style cooking method keeps all the flavour sealed in, delivering a bold taste that will leave you coming back for more… and more.\n\nAvailable as a single order or as part of a full meal set — because once you\'ve had a taste, one is never enough.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20crispy.png',
+  },
+  {
+    id: 'c2',
+    name: 'Warden’s Crunch + Rice',
+    category: 'Crispy Chicken',
+    price: 36000,
+    shortDescription: 'Crispy Jailbirds wings, marinated deep and sealed with our premium herb blend. Thin golden crunch outside, juicy inside — served with a fluffy portion of white boiled rice.',
+    fullDescription:
+      'Locked down with our exclusive Jailbirds secret blend, these full-size chicken wings are marinated deep to the bone and infused with a bold mix of premium herbs and spices. Every wing is lightly coated to achieve that perfect golden crunch — thin, crispy, and seriously satisfying — while the inside remains tender, juicy, and cooked just right.\n\nPrepared using our signature Jailbirds-style method, the flavour is sealed in tight, delivering a rich, punchy taste that keeps you coming back for another bite… and then another.\n\nServed with 1 portion of fluffy white boiled rice, making it a complete and satisfying meal. Available as a single order or as part of a full meal set — because once you\'ve tried it, one serving is never enough.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20crispy%20with%20rice.png',
+  },
+  {
+    id: 'c3',
+    name: 'Warden’s Crunch Special',
+    category: 'Crispy Chicken',
+    price: 39000,
+    shortDescription: 'Crispy wings sealed with our Jailbirds secret blend. Served with fluffy boiled rice and set sauces — curry, extra hot lava, and creamy cheese — for the ultimate combo.',
+    fullDescription:
+      'Sealed tight with our exclusive Jailbirds secret blend, these full-size chicken wings are marinated right down to the bone and packed with a bold fusion of premium herbs and spices. Each wing is lightly coated to create that perfect golden crunch — thin, crispy, and seriously addictive — while the inside stays tender, juicy, and cooked to perfection.\n\nPrepared the signature Jailbirds way, every bite locks in that rich, punchy flavour that keeps you reaching for more… and then more again.\n\nAnd because we all love that famous Jailbirds sauce, you can now order your chicken wings and rice with our set sauces included — curry sauce, extra hot lava sauce, and creamy cheese sauce — giving you the ultimate flavour combo in every meal.\n\nServed with one portion of fluffy white boiled rice, this dish makes a complete and satisfying feast. Available as a single order or as part of a full meal deal — because once you\'ve tasted it, one serving is never enough.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20crispy%20with%20sauce.png',
+  },
+  {
+    id: 'c4',
+    name: 'Cell Block Fire Bites',
+    category: 'Crispy Chicken',
+    price: 23000,
+    shortDescription: 'Locked and loaded with serious heat. Tender chicken bites in a crispy golden coating, seasoned with our bold spicy blend — served with blazing Lava Hot Sauce.',
+    fullDescription:
+      'Locked and loaded with serious heat, our Cell Block Fire Bites are made from tender, juicy chicken wrapped in a crispy, golden coating that delivers the perfect crunch in every bite. Seasoned with our bold spicy blend, these nuggets bring the fire from the first bite to the last.\n\nServed with our blazing Lava Hot Sauce, made to ignite any true spice lover\'s taste buds — this is not for the faint-hearted. Crispy on the outside, tender on the inside, and packed with full-on flavour.\n\n⚠️ Warning: Maximum heat. No early release. 🔥',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20nuggets%20mealsssss.png',
+  },
   {
     id: 'b1',
     name: 'The Solitary Burger',
@@ -90,12 +143,24 @@ export const MENU_ITEMS: FoodItem[] = [
     name: 'Chicken Max Meal',
     category: 'Meal Deals',
     price: 47000,
-    shortDescription: 'Stacked high and built for serious appetite, the Chicken Max is loaded with bold Jailbirds flavour from top to bottom.',
+    shortDescription: 'Stacked high and built for serious appetite, Chicken Max is loaded with bold Jailbirds flavour from top to bottom — crispy fries, sauced beans, melted cheese, and a cold drink to finish the lockup.',
     fullDescription: 'Includes:\n- Medium: Chicken Max Burger + 250ml Drink + Medium Fries\n- Large: Chicken Max Burger + 390ml Drink + Large Fries\n\nStacked high and built for serious appetite, the Chicken Max is loaded with bold Jailbirds flavour from top to bottom. It starts with a fresh soft bun, layered with Jailbirds special sauce, followed by crispy golden fries and rich sauced beans. On top sits a juicy chicken burger, melted cheese, a perfectly fried egg, and fresh sliced onion, all sealed with a toasted bun.\n\nServed as a full meal with crispy French fries and a cold drink of your choice — this one delivers big taste in every bite.',
     deliveryCharge: 0,
     deliveryTime: '35-45 min',
     freeGift: 'FREE ATM Leather Jailbirds Wallet',
     image: 'https://ik.imagekit.io/7grri5v7d/ssssssssdddxxxx.png'
+  },
+  {
+    id: 'm7',
+    name: 'Cell Block Fire Bites Meal',
+    category: 'Meal Deals',
+    price: 44000,
+    shortDescription: 'Crispy fire bites with maximum heat, served with medium golden fries and a cold drink. Fully locked in flavour — for spice lovers only.',
+    fullDescription: 'Includes:\n- Medium: Cell Block Fire Bites + 250ml Drink + Medium Fries\n- Large: Cell Block Fire Bites + 390ml Drink + Large Fries\n\nLocked and loaded with serious heat, our Cell Block Fire Bites are made from tender, juicy chicken wrapped in a crispy, golden coating that delivers the perfect crunch in every bite. Seasoned with our bold spicy blend, these nuggets bring the fire from the first bite to the last.\n\nServed with our blazing Lava Hot Sauce to kick every spice lover’s taste buds into overdrive — this one brings maximum heat with no early release.\n\nThis fiery combo comes complete with medium golden French fries and a refreshing cold drink to cool things down… if you can handle the heat.\n\nCrispy. Tender. Spicy. Fully locked in flavour. 🔥',
+    deliveryCharge: 0,
+    deliveryTime: '35-45 min',
+    freeGift: 'FREE ATM Leather Jailbirds Wallet',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20nuggets%20meal.png'
   },
   {
     id: 's1',
@@ -126,7 +191,7 @@ export const MENU_ITEMS: FoodItem[] = [
     name: 'Special Chicken + Coleslaw',
     category: "Sandwich's",
     price: 38000,
-    shortDescription: 'Toasted Special Chicken Sandwich with a fresh coleslaw portion, pressed and toasted to lock in the flavour.',
+    shortDescription: 'Pressed and toasted to lock in the flavour. Tender seasoned chicken, sweet caramelised onions, fresh tomatoes, and melted cheese — served with a fresh creamy coleslaw portion.',
     fullDescription: 'Toasted Special Chicken Sandwich with a fresh coleslaw portion, pressed and toasted to lock in the flavour. Filled with tender seasoned chicken, sweet caramelised onions, fresh tomatoes, melted cheese, and creamy coleslaw. Crispy outside, soft and savoury inside, delicious in every bite.',
     deliveryCharge: 0,
     deliveryTime: '25-35 min',
@@ -219,6 +284,18 @@ export const MENU_ITEMS: FoodItem[] = [
     deliveryTime: '25-35 min',
     freeGift: 'Sticker',
     image: 'https://picsum.photos/seed/burger4/600/600'
+  },
+  {
+    id: 'b5',
+    name: 'Day Break Burger',
+    category: 'Burgers',
+    price: 55000,
+    shortDescription: 'Wake up your taste buds with bold, balanced flavour — special sauce, crispy fries, creamy coleslaw, sausage, fried egg, and caramelised onions stacked in one bite.',
+    fullDescription: 'Wake up your taste buds with the bold and balanced flavors of the Day Break Burger. Built from the ground up on a soft, freshly toasted bun layered with Jailbirds’ signature special sauce, this powerhouse burger delivers the perfect morning kick.\n\nCrispy golden fries add crunch, followed by fresh, creamy coleslaw for a cool contrast. A juicy, savory sausage takes center stage, topped with a perfectly fried egg and sweet caramelized fried onions. Finished with the top bun, every bite is stacked with texture, flavor, and satisfaction.\n\nThis isn’t just a burger — it’s a full day breakfast packed into one unforgettable bite.',
+    deliveryCharge: 5000,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/chicken%20burger%20new.png'
   },
   {
     id: 'h2',
