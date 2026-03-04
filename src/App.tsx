@@ -398,6 +398,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
     if (item.id === 's2') return ['Onion', 'Tamatoe', 'Cheese', 'Smoked Beef', 'Sauce'];
     if (item.id === 's3') return ['Cheese', 'Onion', 'Tamatoe', 'Sauce'];
     if (item.id === 's4') return ['Tamatoe', 'Onion', 'Cheese', 'Sauce', 'Lettuce', 'Black Coffee', 'White Capucino'];
+    if (item.id === 's5') return ['Onion', 'Tamatoe', 'Cheese', 'Lettuce', 'Sauce'];
     return ['Extra Cheese', 'Extra Sauce', 'Bacon'];
   }, [item.id]);
 
@@ -410,6 +411,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone }: {
     if (item.id === 's2') return ['Onion', 'Cheese', 'Tamatoe'];
     if (item.id === 's3') return ['Onion', 'Cheese', 'Tamatoe', 'Butter'];
     if (item.id === 's4') return ['Cheese', 'Onion', 'Tamatoe', 'Mayonaise', 'Butter'];
+    if (item.id === 's5') return ['Onion', 'Cheese', 'Tamatoe', 'Lettuce', 'Mayonaise'];
     return ['No Onions', 'No Pickles', 'No Mayo'];
   }, [item.id]);
   const SMALL_DRINK_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta'];

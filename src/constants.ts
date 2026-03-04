@@ -146,6 +146,18 @@ export const MENU_ITEMS: FoodItem[] = [
     image: 'https://ik.imagekit.io/7grri5v7d/chicken%20sandwichss.png'
   },
   {
+    id: 's5',
+    name: 'Smoked Beef Salad',
+    category: "Sandwich's",
+    price: 37000,
+    shortDescription: 'Made fresh with soft white bread spread with creamy mayonnaise, layered with crisp lettuce and juicy tomatoes.',
+    fullDescription: 'Made fresh with soft white bread spread with creamy mayonnaise, layered with crisp lettuce and juicy tomatoes. Filled with tender cooked smoked beef, sliced cheese, fresh onion, and an extra touch of mayo for a rich, smooth flavour, then topped with a soft layer of bread.\n\nFresh, flavourful, and satisfying — with the option to add a freshly brewed coffee to complete your meal.',
+    deliveryCharge: 0,
+    deliveryTime: '25-35 min',
+    freeGift: 'Prison Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/smokey%20%20sandwichss.png'
+  },
+  {
     id: 'h1',
     name: 'Chain Gang Dog',
     category: 'HotDogs',
