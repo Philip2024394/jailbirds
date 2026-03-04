@@ -15,6 +15,7 @@ import {
   MessageSquare,
   History,
   ShieldAlert,
+  Check,
   Beef,
   Package,
   UtensilsCrossed,
@@ -24,11 +25,73 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { CATEGORIES, MENU_ITEMS, REWARDS } from './constants';
-import { Category, FoodItem, CartItem } from './types';
+import { Category, FoodItem, CartCustomization, CartLineItem, SmallDrinkOption } from './types';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+type DeliveryZoneId = 'A' | 'B' | 'C';
+
+const STORE_LOCATION = {
+  lat: -7.8238,
+  lng: 110.4185,
+};
+
+const DELIVERY_ZONES: Array<{
+  id: DeliveryZoneId;
+  label: string;
+  fee: number;
+  minKm: number;
+  maxKm: number;
+  minOrder: number;
+}> = [
+  { id: 'A', label: 'Zone A – Rp 10,000 (0–3 km)', fee: 10_000, minKm: 0, maxKm: 3, minOrder: 0 },
+  { id: 'B', label: 'Zone B – Rp 15,000 (3–6 km)', fee: 15_000, minKm: 3, maxKm: 6, minOrder: 50_000 },
+  { id: 'C', label: 'Zone C – Rp 20,000 (6–9 km)', fee: 20_000, minKm: 6, maxKm: 9, minOrder: 75_000 },
+];
+
+const EXTRA_PRICES: Record<string, number> = {
+  'Extra Cheese': 5000,
+  'Extra Sauce': 4000,
+  'Bacon': 8000,
+};
+
+const SMALL_DRINK_PRICE = 8000;
+
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+
+  const s =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+  return R * c;
+};
+
+const inferredZoneFromDistance = (distanceKm: number): DeliveryZoneId | null => {
+  if (!Number.isFinite(distanceKm) || distanceKm < 0) return null;
+  if (distanceKm <= 3) return 'A';
+  if (distanceKm <= 6) return 'B';
+  if (distanceKm <= 9) return 'C';
+  return null;
+};
+
+const cartLineItemSubtotal = (item: CartLineItem) => {
+  const extrasTotal = (Object.entries(item.customization.extras) as [string, number][])?.reduce(
+    (acc, [k, v]) => acc + (EXTRA_PRICES[k] ?? 0) * (v ?? 0),
+    0
+  );
+  const drinkTotal = item.customization.smallDrink ? SMALL_DRINK_PRICE : 0;
+  const perUnit = item.price + extrasTotal + drinkTotal;
+  return perUnit * item.quantity;
+};
 
 const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string }>> = {
   'Burgers': Beef,
@@ -142,7 +205,7 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
     <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
       <motion.div
         whileHover={{ y: -5 }}
-        className="metallic-steel rounded-2xl overflow-hidden group cursor-pointer shadow-2xl flex flex-col h-full"
+        className="metallic-steel rounded-2xl overflow-hidden group cursor-pointer shadow-2xl flex flex-col h-full relative"
         onClick={onClick}
       >
       {/* Image Container with Padding */}
@@ -155,16 +218,30 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
             referrerPolicy="no-referrer"
           />
           {/* Cinematic Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-prison-black/60 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-prison-black/85 via-prison-black/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_55%)] pointer-events-none" />
           
           {/* Price Tag */}
-          <div className="absolute top-2 right-2 bg-prison-black/90 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 shadow-lg">
+          <div className="absolute top-2 right-2 bg-prison-black/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 shadow-lg">
             <span className="text-prison-orange font-black text-xs md:text-sm industrial-font">Rp {(item.price / 1000).toFixed(0)}k</span>
+          </div>
+
+          <div className="absolute top-2 left-2 flex items-center gap-2">
+            <span className="bg-prison-orange text-black px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest brutal-border border-black shadow-lg">
+              {item.category}
+            </span>
+            {item.spicyLevel && (
+              <div className="flex gap-0.5 bg-prison-black/70 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1 shadow-lg">
+                {[...Array(item.spicyLevel)].map((_, i) => (
+                  <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Bestseller Badge (Simulated) */}
           {item.price > 50000 && (
-            <div className="absolute top-2 left-2 bg-prison-orange text-black font-black text-[8px] md:text-[10px] px-2 py-0.5 rounded-sm uppercase tracking-tighter rotate-[-5deg] shadow-lg">
+            <div className="absolute bottom-2 left-2 bg-prison-orange text-black font-black text-[8px] md:text-[10px] px-2 py-0.5 rounded-sm uppercase tracking-tighter rotate-[-5deg] shadow-lg brutal-border border-black">
               BESTSELLER
             </div>
           )}
@@ -173,38 +250,37 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
 
       {/* Content Area */}
       <div className="p-3 md:p-4 flex flex-col flex-grow">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className="font-black text-sm md:text-lg group-hover:text-prison-orange transition-colors uppercase tracking-tighter industrial-font leading-none">
+        <div className="mb-2">
+          <h3 className="font-black text-sm md:text-lg group-hover:text-prison-orange transition-colors uppercase tracking-tighter industrial-font leading-tight line-clamp-2">
             {item.name}
           </h3>
-          {item.spicyLevel && (
-            <div className="flex gap-0.5">
-              {[...Array(item.spicyLevel)].map((_, i) => (
-                <Flame key={i} className="w-3 h-3 md:w-4 md:h-4 text-red-500 fill-red-500" />
-              ))}
-            </div>
-          )}
         </div>
         
-        <p className="text-white/50 text-[10px] md:text-xs line-clamp-1 mb-3 font-medium italic">
+        <p className="text-white/55 text-[10px] md:text-xs line-clamp-2 mb-3 font-medium italic">
           {item.shortDescription}
         </p>
 
         <div className="mt-auto space-y-3">
           {/* Delivery Info */}
-          <div className="flex items-center gap-3 text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-white/30">
-            <div className="flex items-center gap-1">
-              <Truck className="w-3 h-3" />
-              <span>Rp {item.deliveryCharge}</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 flex items-center gap-2">
+              <Truck className="w-4 h-4 text-white/40" />
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Delivery</p>
+                <p className="text-[10px] font-black text-white/70 truncate">Rp {item.deliveryCharge.toLocaleString()}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{item.deliveryTime}</span>
+            <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-white/40" />
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">ETA</p>
+                <p className="text-[10px] font-black text-white/70 truncate">{item.deliveryTime}</p>
+              </div>
             </div>
           </div>
 
           {/* Add to Lockup Button */}
-          <button className="w-full orange-gradient-glow text-black font-black text-[10px] md:text-xs py-2.5 rounded-lg flex items-center justify-center gap-2 uppercase tracking-tighter transition-all active:scale-95 group-hover:brightness-110">
+          <button className="w-full orange-gradient-glow text-black font-black text-[10px] md:text-xs py-3 rounded-xl flex items-center justify-center gap-2 uppercase tracking-tighter transition-all active:scale-[0.98] group-hover:brightness-110 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
             <ShieldAlert className="w-3 h-3 md:w-4 md:h-4" />
             ADD TO LOCKUP
           </button>
@@ -218,9 +294,58 @@ const FoodCard = ({ item, onClick }: { item: FoodItem, onClick: () => void, key?
 const FoodDrawer = ({ item, onClose, onAddToCart }: { 
   item: FoodItem | null, 
   onClose: () => void,
-  onAddToCart: (item: FoodItem) => void
+  onAddToCart: (item: FoodItem, customization: CartCustomization, quantity: number) => void
 }) => {
   if (!item) return null;
+
+  const isMealDeal = item.category === 'Meal Deals';
+  const showSmallDrinkAddOn = !isMealDeal && item.category !== 'Drinks';
+
+  const EXTRA_OPTIONS = ['Extra Cheese', 'Extra Sauce', 'Bacon'];
+  const REMOVAL_OPTIONS = ['No Onions', 'No Pickles', 'No Mayo'];
+  const SMALL_DRINK_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta'];
+
+  const SMALL_DRINK_ICONS: Record<SmallDrinkOption, string> = {
+    'Coca Cola': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#b91c1c"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">C</text></svg>')}`,
+    'Sprite': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#16a34a"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">S</text></svg>')}`,
+    'Aqua': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0284c7"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">A</text></svg>')}`,
+    'Fanta': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#ea580c"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">F</text></svg>')}`,
+  };
+
+  const [extrasSelected, setExtrasSelected] = useState<Record<string, boolean>>(() => {
+    return EXTRA_OPTIONS.reduce<Record<string, boolean>>((acc, opt) => {
+      acc[opt] = false;
+      return acc;
+    }, {});
+  });
+  const [removals, setRemovals] = useState<Record<string, boolean>>(() => {
+    return REMOVAL_OPTIONS.reduce<Record<string, boolean>>((acc, opt) => {
+      acc[opt] = false;
+      return acc;
+    }, {});
+  });
+  const [smallDrink, setSmallDrink] = useState<SmallDrinkOption | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  const selectedExtras = useMemo(() => {
+    return (Object.entries(extrasSelected) as [string, boolean][]).filter(([, v]) => v).map(([k]) => k);
+  }, [extrasSelected]);
+
+  const selectedRemovals = useMemo(() => {
+    return (Object.entries(removals) as [string, boolean][]).filter(([, v]) => v).map(([k]) => k);
+  }, [removals]);
+
+  const extrasTotal = useMemo(() => {
+    return selectedExtras.reduce((acc, k) => acc + (EXTRA_PRICES[k] ?? 0), 0);
+  }, [selectedExtras]);
+
+  const drinkTotal = useMemo(() => {
+    return showSmallDrinkAddOn && smallDrink ? SMALL_DRINK_PRICE : 0;
+  }, [SMALL_DRINK_PRICE, showSmallDrinkAddOn, smallDrink]);
+
+  const lineTotal = useMemo(() => {
+    return (item.price + extrasTotal + drinkTotal) * quantity;
+  }, [drinkTotal, extrasTotal, item.price, quantity]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center">
@@ -236,7 +361,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-2xl bg-prison-grey rounded-t-3xl brutal-border border-white/20 p-6 md:p-8 overflow-y-auto max-h-[90vh]"
+        className="relative w-full max-w-2xl bg-prison-grey/80 backdrop-blur-xl rounded-t-3xl brutal-border border-white/20 overflow-y-auto max-h-[90vh] shadow-2xl"
       >
         <button 
           onClick={onClose}
@@ -245,67 +370,264 @@ const FoodDrawer = ({ item, onClose, onAddToCart }: {
           <X className="w-6 h-6" />
         </button>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="aspect-square rounded-2xl overflow-hidden brutal-border border-white/10">
-            <img 
-              src={item.image} 
-              alt={item.name}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-prison-orange text-black px-2 py-0.5 text-[10px] font-bold uppercase rounded-sm">
-                {item.category}
-              </span>
-              {item.spicyLevel && (
-                <div className="flex gap-0.5">
-                  {[...Array(item.spicyLevel)].map((_, i) => (
-                    <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
-                  ))}
-                </div>
-              )}
+        <div className="p-4 md:p-6">
+          <div className="relative rounded-2xl overflow-hidden brutal-border border-white/10 shadow-inner">
+            <div className="aspect-[4/3] bg-prison-black">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
-            <h2 className="text-3xl font-bold uppercase tracking-tighter mb-2">{item.name}</h2>
-            <p className="text-prison-orange text-2xl font-bold mb-6">Rp {item.price.toLocaleString()}</p>
-            
-            <div className="space-y-4 mb-8">
-              <p className="text-white/70 leading-relaxed italic">
+            <div className="absolute inset-0 bg-gradient-to-t from-prison-black/85 via-prison-black/10 to-transparent pointer-events-none" />
+            <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-prison-orange text-black px-2 py-0.5 text-[10px] font-black uppercase rounded-sm brutal-border border-black shadow-lg">
+                    {item.category}
+                  </span>
+                  {item.spicyLevel && (
+                    <div className="flex gap-0.5">
+                      {[...Array(item.spicyLevel)].map((_, i) => (
+                        <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter leading-none truncate">
+                  {item.name}
+                </h2>
+              </div>
+              <div className="flex-shrink-0 bg-prison-black/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 shadow-lg">
+                <p className="text-prison-orange text-lg md:text-2xl font-black">Rp {item.price.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-4">
+            <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+              <p className="text-white/75 leading-relaxed italic text-sm md:text-base">
                 {item.fullDescription}
               </p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                  <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Delivery</p>
-                  <p className="text-sm font-bold">Rp {item.deliveryCharge.toLocaleString()}</p>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <p className="text-[10px] text-white/40 uppercase font-black mb-1">Delivery</p>
+                  <p className="text-sm font-black">Rp {item.deliveryCharge.toLocaleString()}</p>
                 </div>
-                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                  <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Time</p>
-                  <p className="text-sm font-bold">{item.deliveryTime}</p>
+                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <p className="text-[10px] text-white/40 uppercase font-black mb-1">Time</p>
+                  <p className="text-sm font-black">{item.deliveryTime}</p>
                 </div>
               </div>
 
               {item.freeGift && (
-                <div className="bg-prison-orange/10 p-3 rounded-xl border border-prison-orange/20 flex items-center gap-3">
+                <div className="mt-4 bg-prison-orange/10 p-3 rounded-xl border border-prison-orange/20 flex items-center gap-3">
                   <Gift className="text-prison-orange w-5 h-5" />
                   <div>
-                    <p className="text-[10px] text-prison-orange uppercase font-bold">Free Gift</p>
-                    <p className="text-sm font-bold">{item.freeGift}</p>
+                    <p className="text-[10px] text-prison-orange uppercase font-black">Free Gift</p>
+                    <p className="text-sm font-black">{item.freeGift}</p>
                   </div>
                 </div>
               )}
             </div>
 
+            <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Quantity</p>
+                  <p className="text-xs text-white/50 font-bold italic">Choose how many to add</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white/5 rounded-xl p-1 border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    className="p-2 hover:bg-white/10 rounded-lg"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="font-black w-6 text-center">{quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(q => Math.min(10, q + 1))}
+                    className="p-2 hover:bg-white/10 rounded-lg"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+              <div className="mb-3">
+                <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Extras</p>
+                <p className="text-xs text-white/50 font-bold italic">Tap to add upgrades</p>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {EXTRA_OPTIONS.map((opt) => {
+                  const checked = !!extrasSelected[opt];
+                  return (
+                    <label
+                      key={opt}
+                      className={cn(
+                        "flex items-center justify-between gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors",
+                        checked
+                          ? "bg-prison-orange/15 border-prison-orange/40"
+                          : "bg-white/5 border-white/10 hover:border-prison-orange/40"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={cn(
+                            "w-5 h-5 rounded-md border flex items-center justify-center",
+                            checked
+                              ? "bg-prison-orange border-black"
+                              : "bg-transparent border-white/30"
+                          )}
+                        >
+                          {checked && <Check className="w-3.5 h-3.5 text-black" />}
+                        </span>
+                        <span className="font-black text-sm uppercase tracking-tight truncate">{opt}</span>
+                      </div>
+                      <span className={cn(
+                        "text-xs font-black uppercase tracking-widest",
+                        checked ? "text-prison-orange" : "text-white/40"
+                      )}>
+                        +Rp {(EXTRA_PRICES[opt] ?? 0).toLocaleString()}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => setExtrasSelected(prev => ({ ...prev, [opt]: !prev[opt] }))}
+                        className="sr-only"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 backdrop-blur-md p-4 md:p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+              <div className="mb-3">
+                <p className="text-[10px] text-red-200 uppercase font-black tracking-widest">Remove Items</p>
+                <p className="text-xs text-red-100/70 font-bold italic">We’ll leave it out</p>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {REMOVAL_OPTIONS.map((opt) => {
+                  const checked = !!removals[opt];
+                  return (
+                    <label
+                      key={opt}
+                      className={cn(
+                        "flex items-center justify-between gap-3 rounded-xl border px-3 py-2 cursor-pointer transition-colors",
+                        checked
+                          ? "bg-red-500/30 border-red-400/50"
+                          : "bg-white/5 border-red-500/20 hover:border-red-400/60"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={cn(
+                            "w-5 h-5 rounded-md border flex items-center justify-center",
+                            checked
+                              ? "bg-red-500 border-black"
+                              : "bg-transparent border-red-200/40"
+                          )}
+                        >
+                          {checked && <Check className="w-3.5 h-3.5 text-black" />}
+                        </span>
+                        <span className="font-black text-sm uppercase tracking-tight truncate">{opt}</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => setRemovals(prev => ({ ...prev, [opt]: !prev[opt] }))}
+                        className="sr-only"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {showSmallDrinkAddOn && (
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                <div className="mb-3">
+                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Small Drink (250ml)</p>
+                  <p className="text-xs text-white/50 font-bold italic">Optional add-on</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {SMALL_DRINK_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setSmallDrink(prev => (prev === opt ? null : opt))}
+                      className={cn(
+                        "text-left px-3 py-2 rounded-xl border text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2",
+                        smallDrink === opt
+                          ? "bg-prison-orange text-black border-black"
+                          : "bg-white/5 text-white/80 border-white/10 hover:border-prison-orange/40"
+                      )}
+                    >
+                      <img src={SMALL_DRINK_ICONS[opt]} alt={opt} className="w-5 h-5 rounded" />
+                      <span className="truncate flex-grow">{opt}</span>
+                      <span className={cn(
+                        "text-[10px] font-black",
+                        smallDrink === opt ? "text-black/70" : "text-white/40"
+                      )}>
+                        +Rp {SMALL_DRINK_PRICE.toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="sticky bottom-0 left-0 right-0 mt-6 pb-4">
+            {(selectedExtras.length > 0 || selectedRemovals.length > 0 || (showSmallDrinkAddOn && smallDrink)) && (
+              <div className="mb-3 bg-prison-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-3">
+                <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Selected</p>
+                <div className="text-xs font-bold text-white/75 space-y-1">
+                  {selectedExtras.length > 0 && (
+                    <div>
+                      + {selectedExtras.join(', ')}
+                    </div>
+                  )}
+                  {selectedRemovals.length > 0 && (
+                    <div>
+                      - {selectedRemovals.join(', ')}
+                    </div>
+                  )}
+                  {showSmallDrinkAddOn && smallDrink && (
+                    <div>
+                      + Small Drink 250ml: {smallDrink}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <button
               onClick={() => {
-                onAddToCart(item);
+                const customization: CartCustomization = {
+                  extras: Object.fromEntries(
+                    (Object.entries(extrasSelected) as [string, boolean][]) 
+                      .filter(([, v]) => v)
+                      .map(([k]) => [k, 1])
+                  ) as Record<string, number>,
+                  removals: (Object.entries(removals) as [string, boolean][]).filter(([, v]) => v).map(([k]) => k),
+                  smallDrink: showSmallDrinkAddOn ? smallDrink : null,
+                };
+
+                onAddToCart(item, customization, quantity);
                 onClose();
               }}
-              className="mt-auto w-full orange-gradient-glow text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-tighter transition-all active:scale-95 hover:brightness-110"
+              className="w-full orange-gradient-glow text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase tracking-tighter transition-all active:scale-[0.99] hover:brightness-110 shadow-2xl"
             >
               <ShieldAlert className="w-5 h-5" />
-              ADD TO LOCKUP
+              ADD TO LOCKUP • Rp {lineTotal.toLocaleString()}
             </button>
           </div>
         </div>
@@ -435,7 +757,7 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
                 {activeCategory}
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
               <AnimatePresence mode="wait">
                 {filteredItems.map((item, index) => (
                   <motion.div
@@ -463,7 +785,11 @@ const HomePage = ({ onSelectItem }: { onSelectItem: (item: FoodItem) => void }) 
 
 const WardensOffice = () => {
   return (
-    <div className="pt-32 pb-20 max-w-7xl mx-auto px-4">
+    <div
+      className="pt-32 pb-20 min-h-screen w-full bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/warden-bg.jpg')" }}
+    >
+      <div className="max-w-7xl mx-auto px-4">
       <div className="text-center mb-16">
         <h1 className="text-5xl md:text-7xl font-black italic mb-4 uppercase tracking-tighter">
           THE <span className="text-prison-orange">WARDEN'S</span> OFFICE
@@ -510,6 +836,7 @@ const WardensOffice = () => {
           </button>
         </div>
       </div>
+      </div>
     </div>
   );
 };
@@ -549,16 +876,80 @@ const StoryPage = () => {
 };
 
 const CartPage = ({ cart, updateQuantity, checkout }: { 
-  cart: CartItem[], 
-  updateQuantity: (id: string, delta: number) => void,
-  checkout: (details: { name: string, address: string }) => void
+  cart: CartLineItem[], 
+  updateQuantity: (lineId: string, delta: number) => void,
+  checkout: (details: {
+    name: string;
+    address: string;
+    kecamatan?: string;
+    zone: DeliveryZoneId;
+    pin: { lat: number; lng: number };
+    distanceKm: number;
+    deliveryFee: number;
+  }) => void
 }) => {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
 
-  const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const delivery = cart.reduce((acc, item) => acc + (item.deliveryCharge), 0);
-  const total = subtotal + delivery;
+  const [kecamatan, setKecamatan] = useState('');
+  const [zone, setZone] = useState<DeliveryZoneId | ''>('');
+  const [pinLat, setPinLat] = useState('');
+  const [pinLng, setPinLng] = useState('');
+
+  const pin = useMemo(() => {
+    const lat = Number(pinLat);
+    const lng = Number(pinLng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  }, [pinLat, pinLng]);
+
+  const distanceKm = useMemo(() => {
+    if (!pin) return null;
+    return haversineKm(STORE_LOCATION, pin);
+  }, [pin]);
+
+  const inferredZone = useMemo(() => {
+    if (distanceKm == null) return null;
+    return inferredZoneFromDistance(distanceKm);
+  }, [distanceKm]);
+
+  const subtotal = cart.reduce((acc, item) => acc + cartLineItemSubtotal(item), 0);
+
+  const selectedZoneConfig = useMemo(() => {
+    if (!zone) return null;
+    return DELIVERY_ZONES.find(z => z.id === zone) ?? null;
+  }, [zone]);
+
+  const deliveryFee = selectedZoneConfig ? selectedZoneConfig.fee : 0;
+  const total = subtotal + deliveryFee;
+
+  const zoneMismatch = useMemo(() => {
+    if (!zone) return false;
+    if (distanceKm == null) return false;
+    const expected = inferredZoneFromDistance(distanceKm);
+    return expected !== zone;
+  }, [zone, distanceKm]);
+
+  const deliveryUnavailable = useMemo(() => {
+    if (distanceKm == null) return false;
+    return inferredZoneFromDistance(distanceKm) == null;
+  }, [distanceKm]);
+
+  const minOrderNotReached = useMemo(() => {
+    if (!selectedZoneConfig) return false;
+    return subtotal < selectedZoneConfig.minOrder;
+  }, [selectedZoneConfig, subtotal]);
+
+  const blockingMessage = useMemo(() => {
+    if (!name.trim() || !address.trim()) return null;
+    if (!zone) return 'Delivery zone is required.';
+    if (!pin) return 'Please enter your map pin coordinates (latitude & longitude).';
+    if (distanceKm == null) return 'Unable to calculate distance. Please check your pin coordinates.';
+    if (deliveryUnavailable) return 'Delivery unavailable beyond 9 km.';
+    if (zoneMismatch) return 'Selected zone does not match your location. Please choose correct zone.';
+    if (minOrderNotReached) return 'Minimum order for your zone has not been reached.';
+    return null;
+  }, [address, deliveryUnavailable, distanceKm, minOrderNotReached, name, pin, zone, zoneMismatch]);
 
   if (cart.length === 0) {
     return (
@@ -578,24 +969,44 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
         <h2 className="text-4xl font-black italic uppercase mb-8 tracking-tighter">YOUR RATIONS</h2>
         <div className="space-y-4">
           {cart.map((item) => (
-            <div key={item.id} className="bg-prison-grey p-4 rounded-2xl brutal-border border-white/10 flex items-center gap-4">
+            <div key={item.lineId} className="bg-prison-grey p-4 rounded-2xl brutal-border border-white/10 flex items-center gap-4">
               <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <div className="flex-grow">
                 <h3 className="font-bold uppercase text-sm">{item.name}</h3>
                 <p className="text-prison-orange font-bold text-xs">Rp {item.price.toLocaleString()}</p>
+
+                {(Object.keys(item.customization.extras).length > 0 || item.customization.removals.length > 0 || item.customization.smallDrink) && (
+                  <div className="mt-2 text-[10px] text-white/50 font-bold uppercase tracking-widest space-y-1">
+                    {Object.keys(item.customization.extras).length > 0 && (
+                      <div>
+                        + {Object.entries(item.customization.extras).map(([k, v]) => `${k}${v > 1 ? ` x${v}` : ''}`).join(', ')}
+                      </div>
+                    )}
+                    {item.customization.removals.length > 0 && (
+                      <div>
+                        - {item.customization.removals.join(', ')}
+                      </div>
+                    )}
+                    {item.customization.smallDrink && (
+                      <div>
+                        + Small Drink 250ml: {item.customization.smallDrink}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-3 bg-white/5 rounded-lg p-1">
                 <button 
-                  onClick={() => updateQuantity(item.id, -1)}
+                  onClick={() => updateQuantity(item.lineId, -1)}
                   className="p-1 hover:bg-white/10 rounded"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 <span className="font-bold w-4 text-center">{item.quantity}</span>
                 <button 
-                  onClick={() => updateQuantity(item.id, 1)}
+                  onClick={() => updateQuantity(item.lineId, 1)}
                   className="p-1 hover:bg-white/10 rounded"
                 >
                   <Plus className="w-4 h-4" />
@@ -632,6 +1043,63 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors resize-none"
               />
             </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">District / Kecamatan (Optional)</label>
+              <input
+                value={kecamatan}
+                onChange={(e) => setKecamatan(e.target.value)}
+                placeholder="Example: Banguntapan"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Delivery Zone (Required)</label>
+              <select
+                value={zone}
+                onChange={(e) => setZone(e.target.value as DeliveryZoneId | '')}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
+              >
+                <option value="" disabled>Select your zone</option>
+                {DELIVERY_ZONES.map(z => (
+                  <option key={z.id} value={z.id}>{z.label}</option>
+                ))}
+              </select>
+              {zone && inferredZone && zone !== inferredZone && (
+                <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-red-300">
+                  Selected zone does not match your location. Please choose correct zone.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Google Maps Pin (Latitude / Longitude)</label>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  value={pinLat}
+                  onChange={(e) => setPinLat(e.target.value)}
+                  placeholder="Latitude (e.g. -7.82380)"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
+                />
+                <input
+                  value={pinLng}
+                  onChange={(e) => setPinLng(e.target.value)}
+                  placeholder="Longitude (e.g. 110.41850)"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors"
+                />
+              </div>
+              {distanceKm != null && (
+                <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-white/50">
+                  Distance from kitchen: {distanceKm.toFixed(2)} km
+                </div>
+              )}
+              {deliveryUnavailable && (
+                <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-red-300">
+                  Delivery unavailable beyond 9 km.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -644,7 +1112,7 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
             </div>
             <div className="flex justify-between opacity-70">
               <span>Delivery Charge</span>
-              <span>Rp {delivery.toLocaleString()}</span>
+              <span>Rp {deliveryFee.toLocaleString()}</span>
             </div>
             <div className="h-[1px] bg-black/10 my-4" />
             <div className="flex justify-between text-2xl font-black italic">
@@ -652,9 +1120,26 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
               <span>Rp {total.toLocaleString()}</span>
             </div>
           </div>
+
+          {blockingMessage && (
+            <div className="mb-4 bg-black/10 border border-black/15 rounded-xl p-3 text-[11px] font-black uppercase tracking-widest">
+              {blockingMessage}
+            </div>
+          )}
           <button 
-            disabled={!name || !address}
-            onClick={() => checkout({ name, address })}
+            disabled={!!blockingMessage}
+            onClick={() => {
+              if (!zone || !pin || distanceKm == null || !selectedZoneConfig) return;
+              checkout({
+                name: name.trim(),
+                address: address.trim(),
+                kecamatan: kecamatan.trim() || undefined,
+                zone,
+                pin,
+                distanceKm,
+                deliveryFee: selectedZoneConfig.fee,
+              });
+            }}
             className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-white hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <MessageSquare className="w-5 h-5" />
@@ -671,24 +1156,32 @@ const CartPage = ({ cart, updateQuantity, checkout }: {
 export default function App() {
   const [activePage, setActivePage] = useState('home');
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartLineItem[]>([]);
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const addToCart = (item: FoodItem) => {
+  const addToCart = (item: FoodItem, customization: CartCustomization, quantity: number) => {
     setCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
-      if (existing) {
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+      const hasCustomization = Object.keys(customization.extras).length > 0 || customization.removals.length > 0 || !!customization.smallDrink;
+
+      const qty = Math.max(1, Math.min(10, quantity || 1));
+
+      if (!hasCustomization) {
+        const existing = prev.find(i => i.id === item.id && Object.keys(i.customization.extras).length === 0 && i.customization.removals.length === 0 && !i.customization.smallDrink);
+        if (existing) {
+          return prev.map(i => i.lineId === existing.lineId ? { ...i, quantity: i.quantity + qty } : i);
+        }
       }
-      return [...prev, { ...item, quantity: 1 }];
+
+      const lineId = `${item.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      return [...prev, { ...item, lineId, quantity: qty, customization: { extras: customization.extras, removals: customization.removals, smallDrink: customization.smallDrink ?? null } }];
     });
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (lineId: string, delta: number) => {
     setCart(prev => {
       return prev.map(item => {
-        if (item.id === id) {
+        if (item.lineId === lineId) {
           const newQty = Math.max(0, item.quantity + delta);
           return { ...item, quantity: newQty };
         }
@@ -697,11 +1190,37 @@ export default function App() {
     });
   };
 
-  const handleCheckout = ({ name, address }: { name: string, address: string }) => {
-    const itemsList = cart.map(item => `- ${item.name} (x${item.quantity})`).join('%0A');
-    const total = cart.reduce((acc, item) => acc + (item.price * item.quantity) + item.deliveryCharge, 0);
+  const handleCheckout = (details: {
+    name: string;
+    address: string;
+    kecamatan?: string;
+    zone: DeliveryZoneId;
+    pin: { lat: number; lng: number };
+    distanceKm: number;
+    deliveryFee: number;
+  }) => {
+    const { name, address, kecamatan, zone, pin, distanceKm, deliveryFee } = details;
+    const itemsList = cart.map(item => {
+      const extras = (Object.entries(item.customization.extras) as [string, number][])?.map(([k, v]) => `${k}${v > 1 ? ` x${v}` : ''}`);
+      const removals = item.customization.removals;
+      const smallDrinkLine = item.customization.smallDrink ? [`Small Drink 250ml: ${item.customization.smallDrink}`] : [];
+      const options = [...extras.map(e => `+ ${e}`), ...removals.map(r => `- ${r}`), ...smallDrinkLine.map(s => `+ ${s}`)];
+      const optionsText = options.length > 0 ? `%0A  ${options.join('%0A  ')}` : '';
+      return `- ${item.name} (x${item.quantity})${optionsText}`;
+    }).join('%0A');
+
+    const itemsSubtotal = cart.reduce((acc, item) => acc + cartLineItemSubtotal(item), 0);
+    const total = itemsSubtotal + deliveryFee;
+
+    const deliveryLines = [
+      `*Delivery Zone:* Zone ${zone}`,
+      `*Pin:* ${pin.lat}, ${pin.lng}`,
+      `*Distance:* ${distanceKm.toFixed(2)} km`,
+      `*Delivery Fee:* Rp ${deliveryFee.toLocaleString()}`,
+    ];
+    if (kecamatan) deliveryLines.splice(1, 0, `*Kecamatan:* ${kecamatan}`);
     
-    const message = `*NEW ORDER FROM THE JAILBIRD*%0A%0A*Customer:* ${name}%0A*Address:* ${address}%0A%0A*Items:*%0A${itemsList}%0A%0A*Total:* Rp ${total.toLocaleString()}%0A%0A_Sent from The Jailbird PWA_`;
+    const message = `*NEW ORDER FROM THE JAILBIRD*%0A%0A*Customer:* ${name}%0A*Address:* ${address}%0A%0A${deliveryLines.join('%0A')}%0A%0A*Items:*%0A${itemsList}%0A%0A*Subtotal:* Rp ${itemsSubtotal.toLocaleString()}%0A*Total:* Rp ${total.toLocaleString()}%0A%0A_Sent from The Jailbird PWA_`;
     
     // Replace with actual WhatsApp number
     const whatsappNumber = '6281234567890'; 

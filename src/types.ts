@@ -2,6 +2,8 @@ import { LucideIcon } from 'lucide-react';
 
 export type Category = 'Burgers' | 'Meal Deals' | 'HotDogs' | 'Kebabs' | 'Drinks' | 'Trays';
 
+export type SmallDrinkOption = 'Coca Cola' | 'Sprite' | 'Aqua' | 'Fanta';
+
 export interface FoodItem {
   id: string;
   name: string;
@@ -18,6 +20,18 @@ export interface FoodItem {
 
 export interface CartItem extends FoodItem {
   quantity: number;
+}
+
+export interface CartCustomization {
+  extras: Record<string, number>;
+  removals: string[];
+  smallDrink?: SmallDrinkOption | null;
+}
+
+export interface CartLineItem extends FoodItem {
+  lineId: string;
+  quantity: number;
+  customization: CartCustomization;
 }
 
 export interface Reward {
