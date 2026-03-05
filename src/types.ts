@@ -2,7 +2,7 @@ import { LucideIcon } from 'lucide-react';
 
 export type Category = 'Burgers' | 'Meal Deals' | 'HotDogs' | 'Kebabs' | 'Drinks' | 'Trays' | "Sandwich's" | 'Crispy Chicken' | 'All Day Breakfast';
 
-export type SmallDrinkOption = 'Coca Cola' | 'Sprite' | 'Aqua' | 'Fanta';
+export type SmallDrinkOption = 'Coca Cola' | 'Sprite' | 'Aqua' | 'Fanta' | 'Black Coffee' | 'Cappuccino' | 'Green Tea';
 
 export type MealSize = 'Medium' | 'Large';
 

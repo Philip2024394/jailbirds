@@ -6,7 +6,7 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --color-prison-orange: #FF6B00;
   --color-prison-black: #0A0A0A;
-  --color-prison-grey: #1A1A1A;
+  --color-prison-grey: #0D0D0D;
 }
 
 @layer base {

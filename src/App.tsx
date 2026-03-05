@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, 
@@ -70,6 +70,7 @@ const ChiliPepperIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, .
 
 const DELIVERY_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/scooter%20jailbirds.png';
 const ETA_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/cooking_s-removebg-preview.png';
+const FOOD_BAG_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/food_bag-removebg-preview.png';
 
 type DeliveryZoneId = 'A' | 'B' | 'C';
 
@@ -716,6 +717,7 @@ const Navbar = ({ activePage, setActivePage, cartCount }: {
 
   const navItems = [
     { id: 'home', label: 'THE MESS HALL' },
+    { id: 'mugshot', label: 'MUGSHOT' },
     { id: 'warden', label: "THE WARDEN'S OFFICE" },
     { id: 'story', label: 'THE JAILBIRD STORY' },
   ];
@@ -805,13 +807,6 @@ const Navbar = ({ activePage, setActivePage, cartCount }: {
 
 const FoodCard = ({ item, onClick, selectedZone, liveActivity }: { item: FoodItem, onClick: () => void, selectedZone: DeliveryZoneId | null, liveActivity?: string | null, key?: string }) => {
   const soldCount = useMemo(() => fakeSoldCountForItemId(item.id), [item.id]);
-  const smallDrinkAddOns = useMemo(() => {
-    return [
-      { name: 'Black Coffee', price: 14000 },
-      { name: 'Cappuccino', price: 17000 },
-      { name: 'Green Tea', price: 13000 },
-    ];
-  }, []);
   return (
     <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
       <motion.div
@@ -887,18 +882,6 @@ const FoodCard = ({ item, onClick, selectedZone, liveActivity }: { item: FoodIte
         </p>
 
         <div className="mt-auto space-y-3">
-          <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2">
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/50">
-              Small Drink (250ml)
-            </p>
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
-              {smallDrinkAddOns.map((d) => (
-                <span key={d.name} className="text-[9px] font-black uppercase tracking-widest text-white/60 whitespace-nowrap">
-                  {d.name} {d.price.toLocaleString()}idr
-                </span>
-              ))}
-            </div>
-          </div>
           <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
             <p className="text-[9px] font-black uppercase tracking-widest text-white/50 truncate">
               Sold {soldCount.toLocaleString()}+
@@ -947,6 +930,19 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
   const isMealDeal = item.category === 'Meal Deals';
   const showSmallDrinkAddOn = !isMealDeal && item.category !== 'Drinks';
 
+  const MEAL_DRINK_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta'];
+  const SMALL_DRINK_ADDON_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta', 'Black Coffee', 'Cappuccino', 'Green Tea'];
+
+  const SMALL_DRINK_PRICES: Record<SmallDrinkOption, number> = {
+    'Coca Cola': 8000,
+    'Sprite': 8000,
+    'Aqua': 8000,
+    'Fanta': 8000,
+    'Black Coffee': 14000,
+    'Cappuccino': 17000,
+    'Green Tea': 13000,
+  };
+
   const EXTRA_OPTIONS = useMemo(() => {
     if (item.id === 'c1' || item.id === 'c2') return ['Extra Sauce'];
     if (item.id === 'c3') return ['Onion Rings', 'Sausage'];
@@ -993,13 +989,14 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
     if (item.id === 's5') return ['Onion', 'Cheese', 'Tamatoe', 'Lettuce', 'Mayonaise'];
     return ['No Onions', 'No Pickles', 'No Mayo'];
   }, [item.id]);
-  const SMALL_DRINK_OPTIONS: SmallDrinkOption[] = ['Coca Cola', 'Sprite', 'Aqua', 'Fanta'];
-
   const SMALL_DRINK_ICONS: Record<SmallDrinkOption, string> = {
     'Coca Cola': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#b91c1c"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">C</text></svg>')}`,
     'Sprite': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#16a34a"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">S</text></svg>')}`,
     'Aqua': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0284c7"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">A</text></svg>')}`,
     'Fanta': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#ea580c"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="white">F</text></svg>')}`,
+    'Black Coffee': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#111827"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="white">BC</text></svg>')}`,
+    'Cappuccino': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#78350f"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="white">CP</text></svg>')}`,
+    'Green Tea': `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#166534"/><text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="white">GT</text></svg>')}`,
   };
 
   const [extrasSelected, setExtrasSelected] = useState<Record<string, boolean>>({});
@@ -1040,7 +1037,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
   useEffect(() => {
     const interval = window.setInterval(() => {
       setGiftPreviewIndex(i => (i + 1) % GIFT_FRIEND_PREVIEW_MESSAGES.length);
-    }, 2200);
+    }, 5000);
     return () => window.clearInterval(interval);
   }, []);
 
@@ -1072,8 +1069,8 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
   }, [selectedExtras]);
 
   const drinkTotal = useMemo(() => {
-    return showSmallDrinkAddOn && smallDrink ? SMALL_DRINK_PRICE : 0;
-  }, [SMALL_DRINK_PRICE, showSmallDrinkAddOn, smallDrink]);
+    return showSmallDrinkAddOn && smallDrink ? (SMALL_DRINK_PRICES[smallDrink] ?? 0) : 0;
+  }, [SMALL_DRINK_PRICES, showSmallDrinkAddOn, smallDrink]);
 
   const mealSizeTotal = useMemo(() => {
     if (!isMealDeal) return 0;
@@ -1112,47 +1109,49 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
               className="absolute inset-0 bg-black/70"
               onClick={() => setIsFriesInfoOpen(false)}
             />
-            <motion.div
-              className="relative w-full max-w-md bg-prison-black border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
-              initial={{ y: 16, opacity: 0, scale: 0.98 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 16, opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-            >
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-white font-black uppercase tracking-tighter text-lg">Did You Know ?</div>
-                    <div className="text-white/60 font-bold text-xs italic">Fries container info</div>
+            <div className="barbed-wire-card-wrapper barbed-wire-border rounded-3xl w-full max-w-md">
+              <motion.div
+                className="relative metallic-steel rounded-3xl overflow-hidden shadow-2xl"
+                initial={{ y: 16, opacity: 0, scale: 0.98 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 16, opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-white font-black uppercase tracking-tighter text-lg">Did You Know ?</div>
+                      <div className="text-white/60 font-bold text-xs italic">Fries container info</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsFriesInfoOpen(false)}
+                      className="shrink-0 p-2 rounded-2xl bg-white/5 border border-white/10 hover:border-prison-orange/40"
+                      aria-label="Close"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsFriesInfoOpen(false)}
-                    className="shrink-0 p-2 rounded-2xl bg-white/5 border border-white/10 hover:border-prison-orange/40"
-                    aria-label="Close"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
 
-                <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-                  <div className="aspect-[4/3] bg-black/30">
-                    <img
-                      src="https://ik.imagekit.io/7grri5v7d/french%20fries%20containers.png"
-                      alt="Jailbirds fries container"
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                    />
+                  <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                    <div className="aspect-[4/3] bg-black/30">
+                      <img
+                        src="https://ik.imagekit.io/7grri5v7d/french%20fries%20containers.png"
+                        alt="Jailbirds fries container"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <p className="mt-4 text-white/75 text-sm leading-relaxed italic">
-                  Jailbirds French fries containers are made from special food-grade material that’s waterproof and holds its shape — so after you’ve finished your fries, you can reuse it to store small personal belongings.
-                </p>
-              </div>
-            </motion.div>
+                  <p className="mt-4 text-white/75 text-sm leading-relaxed italic">
+                    Jailbirds French fries containers are made from durable food-grade material that is waterproof and designed to keep its shape. Once you’ve finished your fries, the container can be reused to store small personal items.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1162,7 +1161,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-2xl bg-prison-grey/80 backdrop-blur-xl rounded-t-3xl barbed-wire-border barbed-wire-border-no-dash overflow-y-auto max-h-[90vh] shadow-2xl"
+        className="relative w-full max-w-2xl bg-prison-black/55 backdrop-blur-2xl rounded-t-3xl barbed-wire-border barbed-wire-border-no-dash overflow-y-auto max-h-[90vh] shadow-2xl"
       >
         <div className="p-4 md:p-6">
           <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
@@ -1231,10 +1230,18 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                 {item.name}
               </h2>
               <div className="mt-1 flex items-start justify-between gap-3">
-                <div className="text-prison-orange font-black text-sm md:text-base">
+                <div className="text-prison-orange font-black text-lg md:text-2xl">
                   Rp {(item.id === 'c4' ? fireBitesBasePriceForPieces(quantity) : item.price).toLocaleString()}
                 </div>
                 <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-prison-orange text-right leading-tight">
+                  <img
+                    src="https://ik.imagekit.io/7grri5v7d/handcuffs-removebg-preview.png"
+                    alt=""
+                    className="ml-auto mb-1 h-5 w-auto opacity-90"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
                   ETA {item.deliveryTime}
                 </div>
               </div>
@@ -1338,7 +1345,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                   <p className="text-xs text-white/50 font-bold italic">Choose 1 for your meal</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {SMALL_DRINK_OPTIONS.map((opt) => (
+                  {MEAL_DRINK_OPTIONS.map((opt) => (
                     <button
                       key={opt}
                       type="button"
@@ -1480,7 +1487,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                   <p className="text-xs text-white/50 font-bold italic">Optional add-on</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {SMALL_DRINK_OPTIONS.map((opt) => (
+                  {SMALL_DRINK_ADDON_OPTIONS.map((opt) => (
                     <button
                       key={opt}
                       type="button"
@@ -1498,7 +1505,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                         "text-[10px] font-black",
                         smallDrink === opt ? "text-black/70" : "text-white/40"
                       )}>
-                        +Rp {SMALL_DRINK_PRICE.toLocaleString()}
+                        +Rp {(SMALL_DRINK_PRICES[opt] ?? 0).toLocaleString()}
                       </span>
                     </button>
                   ))}
@@ -1514,17 +1521,36 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
               }}
               className="w-full bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 backdrop-blur-md hover:border-prison-orange/40 transition-colors text-left"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl brutal-border border-black bg-prison-orange text-black flex items-center justify-center font-black uppercase tracking-tight text-xs">
-                  Gift
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Gift a Friend</p>
-                  <p className="text-white font-black uppercase tracking-tighter text-sm truncate">
-                    {GIFT_FRIEND_PREVIEW_MESSAGES[giftPreviewIndex]}
-                  </p>
-                </div>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={GIFT_CARD_OPTIONS[giftPreviewIndex % GIFT_CARD_OPTIONS.length]?.id ?? giftPreviewIndex}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  className="flex items-center gap-3"
+                >
+                  <div className="w-14 h-14 rounded-2xl brutal-border border-black bg-prison-black/40 overflow-hidden shrink-0">
+                    <img
+                      src={GIFT_CARD_OPTIONS[giftPreviewIndex % GIFT_CARD_OPTIONS.length]?.imageUrl}
+                      alt={GIFT_CARD_OPTIONS[giftPreviewIndex % GIFT_CARD_OPTIONS.length]?.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Gift a Friend</p>
+                    <p className="text-white font-black uppercase tracking-tighter text-sm truncate">
+                      {GIFT_CARD_OPTIONS[giftPreviewIndex % GIFT_CARD_OPTIONS.length]?.title ?? GIFT_FRIEND_PREVIEW_MESSAGES[giftPreviewIndex]}
+                    </p>
+                    <p className="text-white/60 font-bold text-xs italic truncate">
+                      {GIFT_CARD_OPTIONS[giftPreviewIndex % GIFT_CARD_OPTIONS.length]?.subtitle}
+                    </p>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </button>
           </div>
 
@@ -1598,13 +1624,11 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
 
   const [homeHeliPhase, setHomeHeliPhase] = useState<'enter' | 'hover' | 'exit'>('enter');
   const [homeHeliDone, setHomeHeliDone] = useState(false);
+  const [bagHasLanded, setBagHasLanded] = useState(false);
 
   useEffect(() => {
     if (homeHeliPhase !== 'hover') return;
-    const timeout = window.setTimeout(() => {
-      setHomeHeliPhase('exit');
-    }, 3000);
-    return () => window.clearTimeout(timeout);
+    setBagHasLanded(false);
   }, [homeHeliPhase]);
 
   const filteredItems = useMemo(() => {
@@ -1706,6 +1730,39 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
               className="w-full h-auto drop-shadow-[0_25px_40px_rgba(0,0,0,0.65)]"
               referrerPolicy="no-referrer"
             />
+
+            {/* Bag drops from behind helicopter while it hovers, then stays landed behind headline */}
+            {!bagHasLanded && homeHeliPhase === 'hover' && (
+              <motion.img
+                key="bag-drop"
+                src={FOOD_BAG_ICON_URL}
+                alt="Food bag"
+                className="absolute left-1/2 top-[58%] -translate-x-1/2 z-0 w-[180px] md:w-[280px] select-none"
+                style={{
+                  transformOrigin: '50% 0%',
+                  filter: 'drop-shadow(0 28px 26px rgba(0,0,0,0.55))',
+                }}
+                initial={{ opacity: 0, y: -18, scale: 0.02, rotate: -8, x: -4 }}
+                animate={{
+                  opacity: 1,
+                  y: 240,
+                  scale: [0.02, 0.18, 0.42, 0.72, 1],
+                  rotate: [-8, 7, -4, 0],
+                  x: [-4, 10, -6, 0],
+                }}
+                transition={{ duration: 1.55, ease: 'easeOut' }}
+                onAnimationComplete={() => {
+                  setBagHasLanded(true);
+                  window.setTimeout(() => {
+                    setHomeHeliPhase((p) => (p === 'hover' ? 'exit' : p));
+                  }, 240);
+                }}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+              />
+            )}
+
             <motion.div
               aria-hidden
               className="absolute left-[47%] top-[13%] w-[58%] h-[34%] rounded-full z-[1]"
@@ -1799,6 +1856,19 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
             referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-prison-black via-prison-black/20 to-transparent" />
+
+          {/* Stationed bag (after landing) — behind headline text */}
+          {bagHasLanded && (
+            <img
+              src={FOOD_BAG_ICON_URL}
+              alt="Food bag"
+              className="absolute left-1/2 top-[40%] -translate-x-1/2 z-[6] w-[180px] md:w-[280px] pointer-events-none select-none"
+              style={{ filter: 'drop-shadow(0 18px 20px rgba(0,0,0,0.55))' }}
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+          )}
           
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 translate-y-[46px] md:-translate-y-[150px]">
             <motion.div
@@ -1809,9 +1879,9 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
               YOGYAKARTA'S MOST WANTED
             </motion.div>
             <motion.h1 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
+              initial={{ opacity: 0, scale: 0.9, y: 0 }}
+              animate={{ opacity: 1, scale: 1, y: bagHasLanded ? 140 : 0 }}
+              transition={{ delay: 0.2, duration: 0.55, ease: 'easeOut' }}
               className="text-4xl md:text-8xl font-black italic tracking-tighter mb-6 uppercase drop-shadow-2xl"
             >
               GUILTY OF <span className="text-prison-orange">GREAT TASTE</span>
@@ -1853,7 +1923,7 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
       </section>
 
       {/* Menu Grid — mobile-first: menu pulled up; desktop: normal spacing */}
-      <section id="menu" className="pt-0 pb-12 md:pb-12 max-w-7xl mx-auto px-4 md:px-4 scroll-mt-20 -mt-[80px] md:mt-6 relative z-30">
+      <section id="menu" className="pt-6 pb-12 md:pt-0 md:pb-12 max-w-7xl mx-auto px-4 md:px-4 scroll-mt-20 -mt-[40px] md:mt-6 relative z-30">
         <div className="min-h-[60vh] md:min-h-0">
           {/* Menu cards area — full width frame, no clipping */}
           <div id="menu-cards" className="min-w-0 overflow-visible">
@@ -1924,6 +1994,465 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
   );
 };
 
+type ShareNavigator = Navigator & {
+  share?: (data: { title?: string; text?: string; files?: File[] }) => Promise<void>;
+  canShare?: (data: { title?: string; text?: string; files?: File[] }) => boolean;
+};
+
+const MugshotPage = () => {
+  const FRAMES = [
+    { id: 'frame-1', label: 'Frame 1', url: 'https://ik.imagekit.io/7grri5v7d/mug%20shot%20good.png' },
+    { id: 'frame-2', label: 'Frame 2', url: 'https://ik.imagekit.io/7grri5v7d/mugshot%202.png' },
+    { id: 'frame-3', label: 'Frame 3', url: 'https://ik.imagekit.io/7grri5v7d/mugshot_3-.png' },
+  ];
+  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
+  const [selfieNatural, setSelfieNatural] = useState<{ w: number; h: number } | null>(null);
+
+  const [name, setName] = useState('');
+  const [frameState, setFrameState] = useState<Record<string, { offset: { x: number; y: number }; zoom: number }>>(() => {
+    const init: Record<string, { offset: { x: number; y: number }; zoom: number }> = {};
+    for (const f of FRAMES) init[f.id] = { offset: { x: 0, y: 0 }, zoom: 1 };
+    return init;
+  });
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selfieUrl) {
+      setSelfieNatural(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => setSelfieNatural({ w: img.naturalWidth, h: img.naturalHeight });
+    img.src = selfieUrl;
+  }, [selfieUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (selfieUrl?.startsWith('blob:')) URL.revokeObjectURL(selfieUrl);
+    };
+  }, [selfieUrl]);
+
+  const onPickSelfie: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setSelfieUrl(url);
+    setFrameState((prev) => {
+      const next: Record<string, { offset: { x: number; y: number }; zoom: number }> = { ...prev };
+      for (const f of FRAMES) next[f.id] = { offset: { x: 0, y: 0 }, zoom: 1 };
+      return next;
+    });
+  };
+
+  const exportComposite = async (args: {
+    frameUrl: string;
+    containerSize: { w: number; h: number };
+    offset: { x: number; y: number };
+    zoom: number;
+  }) => {
+    if (!selfieUrl) return null;
+
+    const frameImg = new Image();
+    frameImg.crossOrigin = 'anonymous';
+    frameImg.decoding = 'async';
+    frameImg.src = args.frameUrl;
+
+    const selfieImg = new Image();
+    selfieImg.decoding = 'async';
+    selfieImg.src = selfieUrl;
+
+    await Promise.all([
+      new Promise<void>((res, rej) => {
+        frameImg.onload = () => res();
+        frameImg.onerror = () => rej(new Error('Failed to load frame image.'));
+      }),
+      new Promise<void>((res, rej) => {
+        selfieImg.onload = () => res();
+        selfieImg.onerror = () => rej(new Error('Failed to load selfie image.'));
+      }),
+    ]);
+
+    const canvas = document.createElement('canvas');
+    const fw = frameImg.naturalWidth || 1080;
+    const fh = frameImg.naturalHeight || 1350;
+    canvas.width = fw;
+    canvas.height = fh;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas context unavailable.');
+
+    const previewW = Math.max(1, args.containerSize.w);
+    const previewH = Math.max(1, args.containerSize.h);
+    const sx = fw / previewW;
+    const sy = fh / previewH;
+    const scaleToCanvas = Math.min(sx, sy);
+    const canvasW = previewW * scaleToCanvas;
+    const canvasH = previewH * scaleToCanvas;
+    const canvasOffsetX = (fw - canvasW) / 2;
+    const canvasOffsetY = (fh - canvasH) / 2;
+
+    const coverBase = Math.max(canvasW / selfieImg.naturalWidth, canvasH / selfieImg.naturalHeight);
+    const drawW = selfieImg.naturalWidth * coverBase * args.zoom;
+    const drawH = selfieImg.naturalHeight * coverBase * args.zoom;
+
+    const drawX = canvasOffsetX + canvasW / 2 - drawW / 2 + args.offset.x * scaleToCanvas;
+    const drawY = canvasOffsetY + canvasH / 2 - drawH / 2 + args.offset.y * scaleToCanvas;
+    ctx.drawImage(selfieImg, drawX, drawY, drawW, drawH);
+    ctx.drawImage(frameImg, 0, 0, fw, fh);
+
+    const safeName = (name || '').trim();
+    if (safeName) {
+      ctx.save();
+      ctx.fillStyle = '#0A0A0A';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const fontSize = Math.floor(fh * 0.045);
+      ctx.font = `900 ${fontSize}px Space Grotesk, ui-sans-serif, system-ui, sans-serif`;
+      ctx.fillText(safeName.toUpperCase(), fw * 0.5, fh * 0.885);
+      ctx.restore();
+    }
+
+    const blob: Blob = await new Promise((res, rej) => {
+      canvas.toBlob((b) => (b ? res(b) : rej(new Error('Export failed.'))), 'image/png');
+    });
+
+    return blob;
+  };
+
+  const shareOrDownload = async (blob: Blob) => {
+    const file = new File([blob], 'jailbirds-mugshot.png', { type: 'image/png' });
+    const appLink = window.location.origin;
+
+    const nav = navigator as ShareNavigator;
+    if (nav.canShare?.({ files: [file] }) && nav.share) {
+      await nav.share({
+        title: 'Jailbirds Mugshot',
+        text: `My Jailbirds mugshot. Get the app: ${appLink}`,
+        files: [file],
+      });
+      return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'jailbirds-mugshot.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const MugshotFrame: React.FC<{ frame: (typeof FRAMES)[number] }> = ({ frame }) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+    const state = frameState[frame.id] ?? { offset: { x: 0, y: 0 }, zoom: 1 };
+
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const obs = new ResizeObserver(() => {
+        const rect = el.getBoundingClientRect();
+        setContainerSize({ w: rect.width, h: rect.height });
+      });
+      obs.observe(el);
+
+      const rect = el.getBoundingClientRect();
+      setContainerSize({ w: rect.width, h: rect.height });
+
+      return () => obs.disconnect();
+    }, []);
+
+    const baseCoverScaleLocal = useMemo(() => {
+      if (!selfieNatural || containerSize.w <= 0 || containerSize.h <= 0) return 1;
+      return Math.max(containerSize.w / selfieNatural.w, containerSize.h / selfieNatural.h);
+    }, [containerSize.h, containerSize.w, selfieNatural]);
+
+    const selfieDrawSizeLocal = useMemo(() => {
+      if (!selfieNatural) return null;
+      const s = baseCoverScaleLocal * state.zoom;
+      return { w: selfieNatural.w * s, h: selfieNatural.h * s };
+    }, [baseCoverScaleLocal, selfieNatural, state.zoom]);
+
+    const clampZoomLocal = (z: number) => Math.max(0.7, Math.min(3, z));
+
+    const clampOffsetLocal = (next: { x: number; y: number }) => {
+      if (!selfieDrawSizeLocal || containerSize.w <= 0 || containerSize.h <= 0) return next;
+      const maxX = Math.max(0, (selfieDrawSizeLocal.w - containerSize.w) / 2);
+      const maxY = Math.max(0, (selfieDrawSizeLocal.h - containerSize.h) / 2);
+      return {
+        x: Math.max(-maxX, Math.min(maxX, next.x)),
+        y: Math.max(-maxY, Math.min(maxY, next.y)),
+      };
+    };
+
+    useEffect(() => {
+      setFrameState((prev) => {
+        const current = prev[frame.id] ?? { offset: { x: 0, y: 0 }, zoom: 1 };
+        const nextOffset = clampOffsetLocal(current.offset);
+        if (nextOffset.x === current.offset.x && nextOffset.y === current.offset.y) return prev;
+        return { ...prev, [frame.id]: { ...current, offset: nextOffset } };
+      });
+    }, [containerSize.h, containerSize.w, frame.id, selfieDrawSizeLocal?.h, selfieDrawSizeLocal?.w]);
+
+    const [isDragging, setIsDragging] = useState(false);
+    const dragStart = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+
+    const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+      if (!selfieUrl) return;
+      (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+      setIsDragging(true);
+      dragStart.current = { x: e.clientX, y: e.clientY, ox: state.offset.x, oy: state.offset.y };
+    };
+
+    const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+      if (!isDragging || !dragStart.current) return;
+      const dx = e.clientX - dragStart.current.x;
+      const dy = e.clientY - dragStart.current.y;
+      const nextOffset = clampOffsetLocal({ x: dragStart.current.ox + dx, y: dragStart.current.oy + dy });
+      setFrameState((prev) => ({ ...prev, [frame.id]: { ...state, offset: nextOffset } }));
+    };
+
+    const onPointerUp: React.PointerEventHandler<HTMLDivElement> = () => {
+      setIsDragging(false);
+      dragStart.current = null;
+    };
+
+    const nudge = (dx: number, dy: number) => {
+      const nextOffset = clampOffsetLocal({ x: state.offset.x + dx, y: state.offset.y + dy });
+      setFrameState((prev) => ({ ...prev, [frame.id]: { ...state, offset: nextOffset } }));
+    };
+
+    const onZoom = (mult: number) => {
+      const nextZoom = clampZoomLocal(state.zoom * mult);
+      setFrameState((prev) => ({ ...prev, [frame.id]: { ...state, zoom: nextZoom } }));
+    };
+
+    const onShareFrame = async () => {
+      try {
+        setExportError(null);
+        setIsExporting(true);
+        const blob = await exportComposite({
+          frameUrl: frame.url,
+          containerSize,
+          offset: state.offset,
+          zoom: state.zoom,
+        });
+        if (!blob) return;
+        await shareOrDownload(blob);
+      } catch (e) {
+        setExportError(e instanceof Error ? e.message : 'Share/export failed.');
+      } finally {
+        setIsExporting(false);
+      }
+    };
+
+    const onDownloadFrame = async () => {
+      try {
+        setExportError(null);
+        setIsExporting(true);
+        const blob = await exportComposite({
+          frameUrl: frame.url,
+          containerSize,
+          offset: state.offset,
+          zoom: state.zoom,
+        });
+        if (!blob) return;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jailbirds-mugshot-${frame.id}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        setExportError(e instanceof Error ? e.message : 'Download failed.');
+      } finally {
+        setIsExporting(false);
+      }
+    };
+
+    return (
+      <div className="bg-prison-black/45 backdrop-blur-xl brutal-border border-white/10 rounded-2xl p-5">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">{frame.label}</p>
+          <div className="text-[10px] text-white/40 font-black uppercase tracking-widest">Drag to position</div>
+        </div>
+
+        <div
+          ref={containerRef}
+          className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden select-none"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          style={{ touchAction: selfieUrl ? 'none' : 'auto' }}
+        >
+          <div className="absolute inset-0 bg-black" />
+
+          {selfieUrl && selfieDrawSizeLocal && (
+            <img
+              src={selfieUrl}
+              alt="Your selfie"
+              className="absolute left-1/2 top-1/2 max-w-none"
+              draggable={false}
+              style={{
+                width: `${selfieDrawSizeLocal.w}px`,
+                height: `${selfieDrawSizeLocal.h}px`,
+                transform: `translate(-50%, -50%) translate(${state.offset.x}px, ${state.offset.y}px)`,
+                filter: 'contrast(1.05) saturate(1.05)',
+              }}
+            />
+          )}
+
+          <img
+            src={frame.url}
+            alt={frame.label}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+
+          {name.trim() && (
+            <div className="absolute left-1/2 w-[78%] -translate-x-1/2 text-center" style={{ bottom: '7.5%' }}>
+              <div className="text-black font-black uppercase tracking-widest text-base md:text-lg leading-none">
+                {name.trim()}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 grid gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              disabled={!selfieUrl}
+              onClick={() => onZoom(0.9)}
+              className="bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Zoom -
+            </button>
+            <button
+              type="button"
+              disabled={!selfieUrl}
+              onClick={() => onZoom(1.1)}
+              className="bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Zoom +
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              disabled={!selfieUrl}
+              onClick={() => nudge(-12, 0)}
+              className="bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Left
+            </button>
+            <button
+              type="button"
+              disabled={!selfieUrl}
+              onClick={() => nudge(0, -12)}
+              className="bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Up
+            </button>
+            <button
+              type="button"
+              disabled={!selfieUrl}
+              onClick={() => nudge(12, 0)}
+              className="bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Right
+            </button>
+            <button
+              type="button"
+              disabled={!selfieUrl}
+              onClick={() => nudge(0, 12)}
+              className="col-start-2 bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Down
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              disabled={!selfieUrl || isExporting}
+              onClick={onShareFrame}
+              className="bg-prison-orange text-black rounded-xl py-3 font-black uppercase tracking-widest text-xs hover:brightness-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isExporting ? 'Working…' : 'Share'}
+            </button>
+            <button
+              type="button"
+              disabled={!selfieUrl || isExporting}
+              onClick={onDownloadFrame}
+              className="bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl py-3 font-black uppercase tracking-widest text-xs"
+            >
+              Download
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="pt-28 pb-20 max-w-7xl mx-auto px-4">
+      <div className="mb-10">
+        <h1 className="text-5xl md:text-7xl font-black italic mb-4 uppercase tracking-tighter">
+          MUG<span className="text-prison-orange">SHOT</span>
+        </h1>
+        <p className="text-white/60 max-w-2xl italic">Take a selfie, lock it into the frame, then share it.</p>
+      </div>
+
+      <div className="grid gap-5 mb-6">
+        <div className="bg-prison-black/45 backdrop-blur-xl brutal-border border-white/10 rounded-2xl p-5">
+          <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-3">Take / Upload Selfie</p>
+          <input
+            type="file"
+            accept="image/*"
+            capture="user"
+            onChange={onPickSelfie}
+            className="block w-full text-xs text-white/60 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-prison-orange file:text-black file:font-black file:uppercase file:tracking-widest hover:file:brightness-95"
+          />
+        </div>
+
+        <div className="bg-prison-black/45 backdrop-blur-xl brutal-border border-white/10 rounded-2xl p-5">
+          <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-3">Name</p>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-prison-orange transition-colors font-black uppercase tracking-widest"
+          />
+        </div>
+
+        {exportError && (
+          <div className="bg-prison-orange text-black brutal-border border-black rounded-2xl p-5">
+            <div className="text-[11px] font-black uppercase tracking-widest">{exportError}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        {FRAMES.map((frame) => (
+          <MugshotFrame key={frame.id} frame={frame} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const WardensOffice = () => {
   return (
     <div
@@ -1942,7 +2471,7 @@ const WardensOffice = () => {
 
       <div className="grid md:grid-cols-3 gap-8">
         {REWARDS.map((reward) => (
-          <div key={reward.id} className="bg-prison-grey brutal-border border-white/10 p-6 rounded-2xl flex flex-col">
+          <div key={reward.id} className="bg-prison-black/45 backdrop-blur-xl brutal-border border-white/10 p-6 rounded-2xl flex flex-col">
             <div className="aspect-square rounded-xl overflow-hidden mb-6 brutal-border border-white/5">
               <img src={reward.image} alt={reward.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
@@ -2000,7 +2529,7 @@ const StoryPage = () => {
           <p>
             While others were planning escapes with tunnels and files, The Chef was perfecting the ultimate burger seasoning. He knew that the only way to truly be free was to share his culinary contraband with the world.
           </p>
-          <div className="bg-prison-grey p-8 rounded-2xl border-l-4 border-prison-orange">
+          <div className="bg-prison-black/45 backdrop-blur-xl p-8 rounded-2xl border-l-4 border-prison-orange">
             <p className="text-2xl font-bold text-white mb-4 uppercase tracking-tight">"THE GREAT ESCAPE"</p>
             <p>On a rainy Tuesday in 2023, the kitchen doors were left unlocked. The Chef didn't just leave; he took the entire spice rack and the secret sauce recipe with him.</p>
           </div>
@@ -2465,6 +2994,16 @@ export default function App() {
               <HomePage onSelectItem={setSelectedItem} selectedZone={selectedDeliveryZone} activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
             </motion.div>
           )}
+          {activePage === 'mugshot' && (
+            <motion.div
+              key="mugshot"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <MugshotPage />
+            </motion.div>
+          )}
           {activePage === 'gift' && (
             <motion.div
               key="gift"
@@ -2532,7 +3071,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="bg-prison-grey border-t border-white/10 py-12 mt-20">
+      <footer className="bg-prison-black/80 backdrop-blur-md border-t border-white/10 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-prison-orange flex items-center justify-center rounded-sm rotate-3 brutal-border border-black">
