@@ -65,6 +65,11 @@
     opacity: 0.85;
   }
 
+  .barbed-wire-border-no-dash::before {
+    content: none;
+    display: none;
+  }
+
   /* Wrapper for menu cards so barbed wire sits on true outer rim */
   .barbed-wire-card-wrapper {
     position: relative;

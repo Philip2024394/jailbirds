@@ -8,6 +8,7 @@ import {
   Clock, 
   Gift, 
   ChevronRight, 
+  ChevronDown,
   Plus, 
   Minus,
   MapPin,
@@ -71,6 +72,33 @@ const DELIVERY_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/scooter%20jailbirds.
 const ETA_ICON_URL = 'https://ik.imagekit.io/7grri5v7d/cooking_s-removebg-preview.png';
 
 type DeliveryZoneId = 'A' | 'B' | 'C';
+
+const fakeSoldCountForItemId = (itemId: string) => {
+  let h = 0;
+  for (let i = 0; i < itemId.length; i++) {
+    h = (h * 31 + itemId.charCodeAt(i)) >>> 0;
+  }
+  const min = 180;
+  const max = 4200;
+  return min + (h % (max - min + 1));
+};
+
+const hashStringToUint = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return h >>> 0;
+};
+
+const mulberry32 = (a: number) => {
+  return () => {
+    let t = (a += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
 
 const STORE_LOCATION = {
   lat: -7.8238,
@@ -454,10 +482,12 @@ const EXTRA_PRICES: Record<string, number> = {
   'Onion Rings': 13000,
   'French Fries': 16000,
   'Coleslaw': 9000,
-  'Onion': 3000,
+  'Onion': 7000,
+  'Butter': 5000,
   'Cheese': 2200,
   'Tamatoe': 3000,
-  'Lettuce': 0,
+  'Lettuce': 67000,
+  'Musrooms': 8000,
   'Smoked Beef': 5000,
   'Sausage': 5000,
   'Fried Egg': 3500,
@@ -499,9 +529,20 @@ const stepFireBitesPieces = (current: number, direction: -1 | 1) => {
 
 const SAUCE_FLAVORS: SauceFlavor[] = ['Chilli', 'BBQ', 'Cheese', 'Tamatoe', 'Mayonaise'];
 
+const DISPLAY_LABELS: Record<string, string> = {
+  'Musrooms': 'Mushrooms',
+  'Tamatoe': 'Tomato',
+  'Fried Tamatoe': 'Fried Tomato',
+  'Tamatoe Fried': 'Fried Tomato',
+  'Mayonaise': 'Mayonnaise',
+  'White Capucino': 'White Cappuccino',
+};
+
+const displayLabel = (raw: string) => DISPLAY_LABELS[raw] ?? raw;
+
 const GIFT_FRIEND_PREVIEW_MESSAGES = [
   'Happy Birthday',
-  'Congrulations',
+  'Congratulations',
   'Miss You',
   'Love You',
   'Safe Journey',
@@ -656,6 +697,7 @@ const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string 
   'Burgers': Beef,
   'Meal Deals': Package,
   "Sandwich's": UtensilsCrossed,
+  'All Day Breakfast': Coffee,
   'HotDogs': UtensilsCrossed,
   'Kebabs': LayoutGrid,
   'Crispy Chicken': UtensilsCrossed,
@@ -761,8 +803,15 @@ const Navbar = ({ activePage, setActivePage, cartCount }: {
   );
 };
 
-const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: () => void, selectedZone: DeliveryZoneId | null, key?: string }) => {
-  const deliveryFee = useMemo(() => deliveryFeeForZone(selectedZone), [selectedZone]);
+const FoodCard = ({ item, onClick, selectedZone, liveActivity }: { item: FoodItem, onClick: () => void, selectedZone: DeliveryZoneId | null, liveActivity?: string | null, key?: string }) => {
+  const soldCount = useMemo(() => fakeSoldCountForItemId(item.id), [item.id]);
+  const smallDrinkAddOns = useMemo(() => {
+    return [
+      { name: 'Black Coffee', price: 14000 },
+      { name: 'Cappuccino', price: 17000 },
+      { name: 'Green Tea', price: 13000 },
+    ];
+  }, []);
   return (
     <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
       <motion.div
@@ -838,36 +887,36 @@ const FoodCard = ({ item, onClick, selectedZone }: { item: FoodItem, onClick: ()
         </p>
 
         <div className="mt-auto space-y-3">
-          {/* Delivery Info */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 flex items-center gap-2">
-              <img
-                src={DELIVERY_ICON_URL}
-                alt="Delivery"
-                className="w-[32px] h-[32px] object-contain opacity-60 -scale-x-100"
-                loading="lazy"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Delivery</p>
-                <p className="text-[10px] font-black text-white/70 truncate">Rp {deliveryFee.toLocaleString()}</p>
-              </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/50">
+              Small Drink (250ml)
+            </p>
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+              {smallDrinkAddOns.map((d) => (
+                <span key={d.name} className="text-[9px] font-black uppercase tracking-widest text-white/60 whitespace-nowrap">
+                  {d.name} {d.price.toLocaleString()}idr
+                </span>
+              ))}
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 flex items-center gap-2">
-              <img
-                src={ETA_ICON_URL}
-                alt="ETA"
-                className="w-[29px] h-[29px] object-contain opacity-60"
-                loading="lazy"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">ETA</p>
-                <p className="text-[10px] font-black text-white/70 truncate">{item.deliveryTime}</p>
-              </div>
-            </div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/50 truncate">
+              Sold {soldCount.toLocaleString()}+
+            </p>
+            <AnimatePresence mode="wait">
+              {liveActivity && (
+                <motion.div
+                  key={liveActivity}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  className="text-[9px] font-black uppercase tracking-widest text-white/60 whitespace-nowrap"
+                >
+                  {liveActivity}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Add to Lockup Button */}
@@ -904,6 +953,12 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
     if (item.id === 'c4') return ['French Fries', 'Coleslaw'];
     if (item.id === 'm7') return ['Extra Sauce'];
     if (item.id === 'b5') return ['Cheese', 'Tamatoe', 'Onion', 'Sauce'];
+    if (item.id === 'h3') return ['Onion', 'Butter', 'Fried Tamatoe', 'Musrooms', 'Lettuce', 'Sauce'];
+    if (item.id === 'a1') return ['Onion', 'Butter', 'Musrooms', 'Fried Tamatoe', 'Lettuce', 'Sauce'];
+    if (item.id === 'a2') return ['Onion', 'Fried Egg', 'Musrooms', 'Fried Tamatoe', 'Lettuce', 'Sauce'];
+    if (item.id === 'a3') return ['Onion', 'Tamatoe', 'Musrooms', 'Sauce'];
+    if (item.id === 'a5') return ['Onion', 'Fried Tamatoe', 'Sauce', 'Fried Egg'];
+    if (item.id === 'a6') return ['Fried Onion', 'Fried Tamatoe', 'Cheese', 'Sauce'];
     if (item.id === 'm2') return ['Onion', 'Cheese', 'Tamatoe'];
     if (item.id === 'm3') return ['Sausage', 'Fried Egg', 'Onion (Parole)', 'Tamatoe Fried', 'Extra Sauce'];
     if (item.id === 'm5') return ['Fried Egg', 'Fried Tamatoe', 'Sauce'];
@@ -921,6 +976,12 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
     if (item.id === 'c4') return ['Remove Lava Sauce'];
     if (item.id === 'm7') return ['Remove Lava Sauce'];
     if (item.id === 'b5') return ['Fries', 'Jailbirds Sauce', 'Fried Egg', 'Fried Onion'];
+    if (item.id === 'h3') return ['Onion', 'Butter', 'Musrooms'];
+    if (item.id === 'a1') return ['Butter', 'Onion', 'Musrooms'];
+    if (item.id === 'a2') return ['Onion', 'Musrooms', 'Butter'];
+    if (item.id === 'a3') return ['Sauce', 'Butter'];
+    if (item.id === 'a5') return ['Cheese', 'Butter', 'Scrambled Eggs'];
+    if (item.id === 'a6') return ['Fried Onion', 'Fried Egg', 'Butter', 'Sauced Beans'];
     if (item.id === 'm2') return ['Cheese', 'Onion', 'Tamatoes', 'Lettuce', 'Sauce'];
     if (item.id === 'm3') return ['Fried Egg', 'Sauced Beans', 'Fries', 'Jailbirds Sauce'];
     if (item.id === 'm5') return ['Fried Egg', 'Fried Onion', 'Fries', 'Jailbirds Sauce'];
@@ -990,7 +1051,10 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
   }, [isMealDeal, item.id]);
 
   useEffect(() => {
-    if (!EXTRA_OPTIONS.includes('Extra Sauce') || !extrasSelected['Extra Sauce']) {
+    if (
+      (!EXTRA_OPTIONS.includes('Extra Sauce') || !extrasSelected['Extra Sauce'])
+      && (!EXTRA_OPTIONS.includes('Sauce') || !extrasSelected['Sauce'])
+    ) {
       setExtraSauceFlavor('');
     }
   }, [extrasSelected, EXTRA_OPTIONS]);
@@ -1098,76 +1162,82 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-2xl bg-prison-grey/80 backdrop-blur-xl rounded-t-3xl brutal-border border-white/20 overflow-y-auto max-h-[90vh] shadow-2xl"
+        className="relative w-full max-w-2xl bg-prison-grey/80 backdrop-blur-xl rounded-t-3xl barbed-wire-border barbed-wire-border-no-dash overflow-y-auto max-h-[90vh] shadow-2xl"
       >
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-prison-orange text-black rounded-full hover:bg-white transition-colors shadow-lg z-10"
-        >
-          <X className="w-6 h-6" />
-        </button>
-
         <div className="p-4 md:p-6">
-          <div className="relative rounded-2xl overflow-hidden brutal-border border-white/10 shadow-inner">
-            <div className="aspect-[4/3] bg-prison-black">
-              {!drawerImageLoaded && (
-                <div className="absolute inset-0 bg-white/5 animate-pulse" />
-              )}
-              <img
-                src={item.image}
-                alt={item.name}
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
-                  drawerImageLoaded ? "opacity-100" : "opacity-0"
+          <div className="barbed-wire-card-wrapper barbed-wire-border rounded-2xl">
+            <div className="relative rounded-2xl overflow-hidden shadow-inner">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-11 h-11 rounded-full bg-black/55 border border-white/10 backdrop-blur-md flex items-center justify-center hover:border-prison-orange/40 transition-colors"
+              >
+                <ChevronDown className="w-6 h-6 text-prison-orange" />
+              </button>
+              <div className="aspect-[4/3] bg-prison-black">
+                {!drawerImageLoaded && (
+                  <div className="absolute inset-0 bg-white/5 animate-pulse" />
                 )}
-                onLoad={() => setDrawerImageLoaded(true)}
-                loading="eager"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-prison-black/85 via-prison-black/10 to-transparent pointer-events-none" />
-            <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  {(item.id === 'c4' || item.id === 'm7') ? (
-                    <div className="flex items-center gap-1.5 bg-prison-black/70 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1 shadow-lg">
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <ChiliPepperIcon key={i} className="w-3 h-3 text-red-500" />
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className={cn(
+                    "w-full h-full object-cover transition-opacity duration-300",
+                    drawerImageLoaded ? "opacity-100" : "opacity-0"
+                  )}
+                  onLoad={() => setDrawerImageLoaded(true)}
+                  loading="eager"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-prison-black/85 via-prison-black/10 to-transparent pointer-events-none" />
+              <div className="absolute bottom-3 left-3 right-3 flex items-end justify-start gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {(item.id === 'c4' || item.id === 'm7') ? (
+                      <div className="flex items-center gap-1.5 bg-prison-black/70 backdrop-blur-md border border-white/10 rounded-lg px-2 py-1 shadow-lg">
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <ChiliPepperIcon key={i} className="w-3 h-3 text-red-500" />
+                          ))}
+                        </div>
+                        <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[9px] font-black brutal-border border-black">
+                          18+
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="bg-prison-orange text-black px-2 py-0.5 text-[10px] font-black uppercase rounded-sm brutal-border border-black shadow-lg">
+                        {item.category}
+                      </span>
+                    )}
+                    {item.spicyLevel && (
+                      <div className="flex gap-0.5">
+                        {[...Array(item.spicyLevel)].map((_, i) => (
+                          <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
                         ))}
                       </div>
-                      <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[9px] font-black brutal-border border-black">
-                        18+
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="bg-prison-orange text-black px-2 py-0.5 text-[10px] font-black uppercase rounded-sm brutal-border border-black shadow-lg">
-                      {item.category}
-                    </span>
-                  )}
-                  {item.spicyLevel && (
-                    <div className="flex gap-0.5">
-                      {[...Array(item.spicyLevel)].map((_, i) => (
-                        <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
-                      ))}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-                <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter leading-none truncate">
-                  {item.name}
-                </h2>
-              </div>
-              <div className="flex-shrink-0 bg-prison-black/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 shadow-lg">
-                <p className="text-prison-orange text-lg md:text-2xl font-black">
-                  Rp {(item.id === 'c4' ? fireBitesBasePriceForPieces(quantity) : item.price).toLocaleString()}
-                </p>
               </div>
             </div>
           </div>
 
           <div className="mt-5 space-y-4">
             <div className="bg-white/5 rounded-2xl border border-white/10 p-4 md:p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+              <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter leading-tight">
+                {item.name}
+              </h2>
+              <div className="mt-1 flex items-start justify-between gap-3">
+                <div className="text-prison-orange font-black text-sm md:text-base">
+                  Rp {(item.id === 'c4' ? fireBitesBasePriceForPieces(quantity) : item.price).toLocaleString()}
+                </div>
+                <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-prison-orange text-right leading-tight">
+                  ETA {item.deliveryTime}
+                </div>
+              </div>
               <p className="text-white/75 leading-relaxed italic text-sm md:text-base">
                 {item.fullDescription}
               </p>
@@ -1182,43 +1252,12 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                 </button>
               )}
 
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <img
-                      src={DELIVERY_ICON_URL}
-                      alt="Delivery"
-                      className="w-[32px] h-[32px] object-contain opacity-60 -scale-x-100"
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                    />
-                    <p className="text-[10px] text-white/40 uppercase font-black">Delivery</p>
-                  </div>
-                  <p className="text-sm font-black">Rp {deliveryFee.toLocaleString()}</p>
-                </div>
-                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <img
-                      src={ETA_ICON_URL}
-                      alt="Time"
-                      className="w-[29px] h-[29px] object-contain opacity-60"
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                    />
-                    <p className="text-[10px] text-white/40 uppercase font-black">Time</p>
-                  </div>
-                  <p className="text-sm font-black">{item.deliveryTime}</p>
-                </div>
-              </div>
-
               {item.freeGift && (
                 <div className="mt-4 bg-prison-orange/10 p-3 rounded-xl border border-prison-orange/20 flex items-center gap-3">
                   <Gift className="text-prison-orange w-5 h-5" />
                   <div>
                     <p className="text-[10px] text-prison-orange uppercase font-black">Free Gift</p>
-                    <p className="text-sm font-black">{item.freeGift}</p>
+                    <p className="text-sm font-black">Jailbird's Leather Wallet</p>
                   </div>
                 </div>
               )}
@@ -1228,7 +1267,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Quantity</p>
-                  <p className="text-xs text-white/50 font-bold italic">Choose how many to add</p>
+                  <p className="text-xs text-prison-orange font-bold italic">Choose how many to add</p>
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 rounded-xl p-1 border border-white/10">
                   <button
@@ -1271,16 +1310,16 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                       type="button"
                       onClick={() => setMealSize(s.id)}
                       className={cn(
-                        "text-left px-3 py-2 rounded-xl border text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-between gap-2",
+                        "text-left px-3 py-2 rounded-xl border transition-colors flex flex-col items-start gap-0.5",
                         mealSize === s.id
                           ? "bg-prison-orange text-black border-black"
                           : "bg-white/5 text-white/80 border-white/10 hover:border-prison-orange/40"
                       )}
                     >
-                      <span className="truncate">{s.id}</span>
+                      <span className="text-xs font-black uppercase tracking-widest leading-tight truncate">{s.id}</span>
                       <span
                         className={cn(
-                          "text-[10px] font-black",
+                          "text-[11px] font-black leading-tight",
                           mealSize === s.id ? "text-black/70" : "text-white/40"
                         )}
                       >
@@ -1353,7 +1392,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                         >
                           {checked && <Check className="w-3.5 h-3.5 text-black" />}
                         </span>
-                        <span className="font-black text-sm uppercase tracking-tight truncate">{opt}</span>
+                        <span className="font-black text-sm uppercase tracking-tight truncate">{displayLabel(opt)}</span>
                       </div>
                       <span className={cn(
                         "text-xs font-black uppercase tracking-widest",
@@ -1372,7 +1411,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                 })}
               </div>
 
-              {EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce'] && (
+              {(EXTRA_OPTIONS.includes('Extra Sauce') || EXTRA_OPTIONS.includes('Sauce')) && (extrasSelected['Extra Sauce'] || extrasSelected['Sauce']) && (
                 <div className="mt-3">
                   <label className="text-[10px] font-bold text-white/40 uppercase mb-1 block">Sauce Selection</label>
                   <select
@@ -1382,7 +1421,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                   >
                     <option value="" disabled>Select sauce</option>
                     {SAUCE_FLAVORS.map((f) => (
-                      <option key={f} value={f}>{f}</option>
+                      <option key={f} value={f}>{displayLabel(f)}</option>
                     ))}
                   </select>
                 </div>
@@ -1395,7 +1434,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                   <p className="text-[10px] text-red-200 uppercase font-black tracking-widest">Remove Items</p>
                   <p className="text-xs text-red-100/70 font-bold italic">We’ll leave it out</p>
                 </div>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {REMOVAL_OPTIONS.map((opt) => {
                     const checked = !!removals[opt];
                     return (
@@ -1419,7 +1458,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                           >
                             {checked && <Check className="w-3.5 h-3.5 text-black" />}
                           </span>
-                          <span className="font-black text-sm uppercase tracking-tight truncate">{opt}</span>
+                          <span className="font-black text-sm uppercase tracking-tight truncate">{displayLabel(opt)}</span>
                         </div>
                         <input
                           type="checkbox"
@@ -1501,12 +1540,15 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                   )}
                   {selectedExtras.length > 0 && (
                     <div>
-                      + {selectedExtras.map(e => e === 'Extra Sauce' && extraSauceFlavor ? `Extra Sauce: ${extraSauceFlavor}` : e).join(', ')}
+                      + {selectedExtras.map(e => {
+                        if ((e === 'Extra Sauce' || e === 'Sauce') && extraSauceFlavor) return `${displayLabel(e)}: ${displayLabel(extraSauceFlavor)}`;
+                        return displayLabel(e);
+                      }).join(', ')}
                     </div>
                   )}
                   {selectedRemovals.length > 0 && (
                     <div>
-                      - {selectedRemovals.join(', ')}
+                      - {selectedRemovals.map(r => displayLabel(r)).join(', ')}
                     </div>
                   )}
                   {showSmallDrinkAddOn && smallDrink && (
@@ -1520,7 +1562,7 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
             <button
               onClick={() => {
                 if (isMealDeal && !mealDrink) return;
-                if (EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce'] && !extraSauceFlavor) return;
+                if ((extrasSelected['Extra Sauce'] || extrasSelected['Sauce']) && !extraSauceFlavor) return;
                 const customization: CartCustomization = {
                   extras: Object.fromEntries(
                     (Object.entries(extrasSelected) as [string, boolean][]) 
@@ -1531,13 +1573,13 @@ const FoodDrawer = ({ item, onClose, onAddToCart, selectedZone, onGiftFriend }: 
                   smallDrink: showSmallDrinkAddOn ? smallDrink : null,
                   mealSize: isMealDeal ? mealSize : null,
                   mealDrink: isMealDeal ? mealDrink : null,
-                  extraSauceFlavor: (EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce']) ? (extraSauceFlavor || null) : null,
+                  extraSauceFlavor: (extrasSelected['Extra Sauce'] || extrasSelected['Sauce']) ? (extraSauceFlavor || null) : null,
                 };
 
                 onAddToCart(item, customization, quantity);
                 onClose();
               }}
-              disabled={(isMealDeal && !mealDrink) || (EXTRA_OPTIONS.includes('Extra Sauce') && extrasSelected['Extra Sauce'] && !extraSauceFlavor)}
+              disabled={(isMealDeal && !mealDrink) || ((extrasSelected['Extra Sauce'] || extrasSelected['Sauce']) && !extraSauceFlavor)}
               className="w-full orange-gradient-glow text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase tracking-tighter transition-all active:scale-[0.99] hover:brightness-110 shadow-2xl"
             >
               <ShieldAlert className="w-5 h-5" />
@@ -1571,11 +1613,61 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
 
   const [menuSkeletonOn, setMenuSkeletonOn] = useState(true);
 
+  const [liveGroupIndex, setLiveGroupIndex] = useState(0);
+  const [liveMessageTick, setLiveMessageTick] = useState(0);
+
   useEffect(() => {
     setMenuSkeletonOn(true);
     const t = window.setTimeout(() => setMenuSkeletonOn(false), 480);
     return () => window.clearTimeout(t);
   }, [activeCategory]);
+
+  useEffect(() => {
+    const groupInterval = window.setInterval(() => {
+      setLiveGroupIndex(i => i + 1);
+    }, 16000);
+
+    const msgInterval = window.setInterval(() => {
+      setLiveMessageTick(t => t + 1);
+    }, 6200);
+
+    return () => {
+      window.clearInterval(groupInterval);
+      window.clearInterval(msgInterval);
+    };
+  }, []);
+
+  const liveActivityById = useMemo(() => {
+    if (filteredItems.length === 0) return {} as Record<string, string | null>;
+
+    const seed = hashStringToUint(activeCategory);
+    const rand = mulberry32(seed);
+
+    const shuffled = [...filteredItems].sort(() => rand() - 0.5);
+    const ids = shuffled.map(i => i.id);
+
+    const groupSize = 5;
+    const totalGroups = Math.max(1, Math.ceil(ids.length / groupSize));
+    const group = ((liveGroupIndex % totalGroups) + totalGroups) % totalGroups;
+    const start = group * groupSize;
+    const activeIds = new Set(ids.slice(start, start + groupSize));
+
+    const makeActivity = (itemId: string) => {
+      const r = mulberry32(hashStringToUint(`${activeCategory}:${itemId}:${group}:${liveMessageTick}`));
+      const roll = r();
+      if (roll < 0.45) {
+        const viewers = 3 + Math.floor(r() * 22);
+        return `${viewers} viewing`;
+      }
+      if (roll < 0.75) return 'Added to cart';
+      if (roll < 0.92) return 'Just ordered';
+      return 'In checkout';
+    };
+
+    return Object.fromEntries(
+      ids.map((id) => [id, activeIds.has(id) ? makeActivity(id) : null])
+    ) as Record<string, string | null>;
+  }, [activeCategory, filteredItems, liveGroupIndex, liveMessageTick]);
 
   return (
     <div className="pt-16">
@@ -1605,9 +1697,9 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
               setHomeHeliDone(true);
             }
           }}
-          className="absolute left-1/2 top-24 md:top-28 -translate-x-1/2 z-30 pointer-events-none"
+          className="absolute left-1/2 top-6 md:top-10 -translate-x-1/2 z-30 pointer-events-none"
         >
-          <div className="relative w-[260px] md:w-[420px]">
+          <div className="relative w-[260px] md:w-[420px] scale-[0.7] origin-top">
             <img
               src="https://ik.imagekit.io/7grri5v7d/Jailbirds%20prison%20helicopter%20philip.png"
               alt="Jailbirds helicopter"
@@ -1724,14 +1816,6 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
             >
               GUILTY OF <span className="text-prison-orange">GREAT TASTE</span>
             </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="max-w-xl mx-auto text-white text-lg md:text-xl font-bold italic mb-8 drop-shadow-lg"
-            >
-              "Food so good, it should be illegal. Serving the best rations in Yogyakarta City since the great escape of '23."
-            </motion.p>
           </div>
 
           {/* Categories under the handcuffs — desktop only */}
@@ -1778,8 +1862,8 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
               <h2 className="text-prison-orange font-black text-lg uppercase tracking-tighter industrial-font">
                 {activeCategory}
               </h2>
-              <div className="mt-2 -mx-4 px-4 overflow-x-auto max-w-full">
-                <div className="flex items-center gap-2 w-max pr-4">
+              <div className="mt-2 -mx-4 px-4 overflow-x-auto max-w-full pb-1">
+                <div className="flex items-center gap-2 w-max pr-8">
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
@@ -1797,7 +1881,7 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-visible">
               <AnimatePresence mode="wait">
                 {menuSkeletonOn ? (
                   Array.from({ length: 6 }).map((_, i) => (
@@ -1826,6 +1910,7 @@ const HomePage = ({ onSelectItem, selectedZone, activeCategory, setActiveCategor
                         item={item} 
                         onClick={() => onSelectItem(item)} 
                         selectedZone={selectedZone}
+                        liveActivity={liveActivityById[item.id]}
                       />
                     </motion.div>
                   ))

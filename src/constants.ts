@@ -4,6 +4,7 @@ export const CATEGORIES: Category[] = [
   'Burgers',
   'Meal Deals',
   "Sandwich's",
+  'All Day Breakfast',
   'HotDogs',
   'Kebabs',
   'Crispy Chicken',
@@ -223,6 +224,66 @@ export const MENU_ITEMS: FoodItem[] = [
     image: 'https://ik.imagekit.io/7grri5v7d/smokey%20%20sandwichss.png'
   },
   {
+    id: 'a1',
+    name: 'The Salad Sausage Roll',
+    category: 'All Day Breakfast',
+    price: 48000,
+    shortDescription: 'Jumbo fried sausage with fresh salad and creamy mayo coleslaw, topped with golden fried diced onions and tasty fried mushrooms — served with hot black coffee.',
+    fullDescription: 'All Day Breakfast is a hearty meal that brings together bold flavours and satisfying textures. A jumbo fried sausage is served with a fresh salad and creamy mayo coleslaw, finished with golden fried diced onions and a line of tasty fried mushrooms. This filling plate is perfect any time of day and comes with a hot black coffee to complete the meal.',
+    deliveryCharge: 5000,
+    deliveryTime: '20-30 min',
+    freeGift: 'Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/all%20day%20breakfast%20s.png'
+  },
+  {
+    id: 'a2',
+    name: 'Salad Sausage Roll with Egg',
+    category: 'All Day Breakfast',
+    price: 36000,
+    shortDescription: 'Jumbo fried sausage with a freshly fried egg, golden diced onions, and savoury fried mushrooms — served with a soft buttered roll and hot black coffee.',
+    fullDescription: 'All Day Breakfast is a hearty plate made for any time of the day. A jumbo fried sausage is served with a freshly fried egg, golden fried diced onions, and a line of savoury fried mushrooms. This satisfying breakfast is paired with a soft buttered roll and a hot black coffee, delivering a simple yet flavourful meal that keeps you going',
+    deliveryCharge: 5000,
+    deliveryTime: '20-30 min',
+    freeGift: 'Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/all%20day%20breakfast%20sfd.png'
+  },
+  {
+    id: 'a3',
+    name: 'Sausage Sandwich',
+    category: 'All Day Breakfast',
+    price: 43000,
+    shortDescription: 'Fresh white bread lightly spread with butter, filled with a juicy jumbo sausage and tomato red sauce — served hot with black coffee.',
+    fullDescription: 'The All Day Breakfast Sausage Sandwich is a simple and satisfying classic. Made with fresh white bread lightly spread with butter, it’s filled with a juicy jumbo sausage and finished with a touch of tomato red sauce for extra flavour. Served hot with a cup of black coffee, this hearty sandwich is perfect for breakfast or any time of the day.',
+    deliveryCharge: 5000,
+    deliveryTime: '20-30 min',
+    freeGift: 'Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/sauage%20sanwichs.png'
+  },
+  {
+    id: 'a5',
+    name: 'Sausage Sax',
+    category: 'All Day Breakfast',
+    price: 49000,
+    shortDescription: 'Fresh oven bread filled with scrambled eggs, jumbo cut sausages, and melted cheese — served hot with black coffee.',
+    fullDescription: 'The Sausage Sax Breakfast – All Day is a hearty sandwich designed to kick-start your morning. Made with fresh bread straight from the oven, it’s filled with fluffy scrambled eggs, layered with juicy jumbo cut sausages, and finished with melted cheese for rich flavour in every bite. Served hot with a cup of black coffee, this satisfying combo is perfect for breakfast any time of the day.',
+    deliveryCharge: 5000,
+    deliveryTime: '20-30 min',
+    freeGift: 'Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/breakfast%20scrambled%20eggs.png'
+  },
+  {
+    id: 'a6',
+    name: 'Breco Sandwich',
+    category: 'All Day Breakfast',
+    price: 54000,
+    shortDescription: 'Fresh morning bread with baked beans, jumbo chicken sausage, golden fried onions, and a fried egg — served with black coffee.',
+    fullDescription: 'The Breco Sandwich is a warm and satisfying all-day breakfast made with fresh bread baked early in the morning and lightly spread with butter. It’s filled with hearty baked beans, layered with a juicy jumbo chicken sausage, topped with golden fried onions and a freshly fried egg. Served with a hot cup of black coffee, this flavourful sandwich is a perfect way to start the day or enjoy any time.',
+    deliveryCharge: 5000,
+    deliveryTime: '20-30 min',
+    freeGift: 'Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/eggs.png'
+  },
+  {
     id: 'h1',
     name: 'Chain Gang Dog',
     category: 'HotDogs',
@@ -233,6 +294,18 @@ export const MENU_ITEMS: FoodItem[] = [
     deliveryTime: '20-30 min',
     freeGift: 'Sticker',
     image: 'https://picsum.photos/seed/hotdog1/600/600'
+  },
+  {
+    id: 'h3',
+    name: 'Sausage Roll Salad',
+    category: 'HotDogs',
+    price: 33000,
+    shortDescription: 'A jumbo fried sausage served with creamy mayo coleslaw, topped with golden fried diced onions and perfectly fried mushrooms.',
+    fullDescription: 'The Jailbirds Sausage Roll Salad is packed with bold flavour and satisfying bites. A jumbo fried sausage is served alongside a creamy mayo coleslaw salad, topped with golden fried diced onions and a line of perfectly fried mushrooms. Fresh, hearty, and full of savoury taste, this dish delivers a rich combination of textures and mouth-watering flavour in every bite.',
+    deliveryCharge: 5000,
+    deliveryTime: '20-30 min',
+    freeGift: 'Sticker',
+    image: 'https://ik.imagekit.io/7grri5v7d/hot%20dog%20coleslawssss.png'
   },
   {
     id: 'k1',
